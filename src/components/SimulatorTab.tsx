@@ -4,7 +4,7 @@ import type { ApplicantInput, CooLReceipt } from '../evidence/types';
 import { PRESET_APPLICANTS, runCreditModel } from '../model/creditModel';
 import { evidenceService } from '../services/evidenceService';
 import type { CooLRecordResult } from '../evidence/adapter';
-import { Button, Panel, StatusBadge, Field, KeyValueGrid, CopyableValue, SectionHeader, EmptyState } from './ui/primitives';
+import { Button, Panel, StatusBadge, Field, KeyValueGrid, CopyableValue, SectionHeader, EmptyState, Stamp } from './ui/primitives';
 import { decisionTone, shortHash } from './ui/format';
 
 interface SimulatorTabProps {
@@ -14,11 +14,11 @@ interface SimulatorTabProps {
 }
 
 const PIPELINE_STEPS = [
-  { label: 'AI Decision', sub: 'CreditRisk-v3' },
-  { label: 'CooL Boundary', sub: 'cool.record()' },
-  { label: 'Commitment', sub: 'H(SALT : in || out)' },
-  { label: 'Hybrid Signatures', sub: 'Ed25519 + ML-DSA-65' },
-  { label: 'Receipt Sealed', sub: 'TEE + RFC 6962' },
+  { label: 'Model decides', sub: 'CreditRisk-v3' },
+  { label: 'State sealed', sub: 'salted SHA-256' },
+  { label: 'Institution signs', sub: 'Ed25519' },
+  { label: 'Quantum countersign', sub: 'ML-DSA-65' },
+  { label: 'Receipt issued', sub: 'enclave + public log' },
 ] as const;
 
 export const SimulatorTab: React.FC<SimulatorTabProps> = ({
@@ -88,25 +88,25 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
   return (
     <div className="space-y-6 pb-12">
       <SectionHeader
-        eyebrow="Decision Console"
+        eyebrow="Decision Console · New case intake"
         title="Autonomous credit underwriting"
         description="Synthetic applicant data is evaluated by the credit model. At the consequential decision boundary, CooL captures cryptographic evidence and seals a receipt."
         actions={
           <div className="flex flex-wrap items-center gap-1.5">
-            <span className="mr-1 font-mono text-[10px] uppercase tracking-wider text-ink-400">Preset:</span>
-            {PRESET_APPLICANTS.map((app, i) => (
+            <span className="mr-1 text-[10px] uppercase text-ink-500">Preset applicants:</span>
+            {PRESET_APPLICANTS.map((app) => (
               <button
                 key={app.applicantId}
                 type="button"
                 onClick={() => handleSelectPreset(app)}
-                className={`rounded border px-2 py-1 font-mono text-[11px] transition-colors ${
+                className={`border px-2 py-1 font-mono text-[11px] transition-colors ${
                   selectedApplicant.applicantId === app.applicantId
-                    ? 'border-accent-500 bg-accent-950 text-accent-300'
-                    : 'border-line-700 bg-base-850 text-ink-300 hover:border-line-600 hover:text-ink-100'
+                    ? 'border-ink-900 bg-ink-900 text-paper-100'
+                    : 'border-rule-500 bg-paper-100 text-ink-700 hover:border-rule-600'
                 }`}
+                style={{ borderRadius: 2 }}
               >
                 #{app.applicantId.slice(-4)}
-                {i === 0 ? '' : ''}
               </button>
             ))}
           </div>
@@ -114,8 +114,8 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
       />
 
       <div className="grid gap-4 xl:grid-cols-12">
-        {/* ── Applicant form ──────────────────────────────────────────────── */}
-        <Panel className="xl:col-span-5" title="Applicant" meta="synthetic data — salted before storage">
+        {/* ── Intake form ─────────────────────────────────────────────────── */}
+        <Panel className="xl:col-span-5" title="Applicant file" meta="synthetic data — salted before storage">
           <div className="space-y-4">
             <div>
               <label className="label" htmlFor="fld-id">
@@ -126,45 +126,43 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
                 type="text"
                 value={customApplicant.applicantId}
                 onChange={(e) => setCustomApplicant({ ...customApplicant, applicantId: e.target.value })}
-                className="input font-mono"
+                className="input"
               />
             </div>
 
-            <fieldset className="rounded-md border border-line-700 p-3">
-              <legend className="px-1 font-mono text-[10px] uppercase tracking-wider text-ink-400">
-                Financial profile
-              </legend>
+            <fieldset className="border border-rule-400 p-3" style={{ borderRadius: 2 }}>
+              <legend className="px-1 text-[10px] uppercase text-ink-600">Financial profile</legend>
               <div className="grid grid-cols-2 gap-3">
                 {numberInput('Annual income ($)', 'annualIncome')}
                 {numberInput('Existing debt ($)', 'existingDebt')}
               </div>
             </fieldset>
 
-            <fieldset className="rounded-md border border-line-700 p-3">
-              <legend className="px-1 font-mono text-[10px] uppercase tracking-wider text-ink-400">Employment</legend>
+            <fieldset className="border border-rule-400 p-3" style={{ borderRadius: 2 }}>
+              <legend className="px-1 text-[10px] uppercase text-ink-600">Employment</legend>
               <div className="grid grid-cols-2 gap-3">
                 {numberInput('Employment (years)', 'employmentYears', '0.1')}
                 {numberInput('Credit score', 'creditScore')}
               </div>
             </fieldset>
 
-            <fieldset className="rounded-md border border-line-700 p-3">
-              <legend className="px-1 font-mono text-[10px] uppercase tracking-wider text-ink-400">Risk indicators</legend>
+            <fieldset className="border border-rule-400 p-3" style={{ borderRadius: 2 }}>
+              <legend className="px-1 text-[10px] uppercase text-ink-600">Risk indicators</legend>
               <div className="grid grid-cols-2 gap-3">
                 {numberInput('Loan requested ($)', 'loanAmountRequested')}
                 {numberInput('Collateral ($)', 'collateralValue')}
               </div>
             </fieldset>
 
-            <div className="border-t border-line-700 pt-4">
+            <div className="border-t border-rule-400 pt-4">
               <Panel
-                title="Model"
-                className="border-line-700/60"
+                title="The model on file"
+                className="bg-paper-50"
                 bodyClassName="p-3"
               >
                 <KeyValueGrid className="grid-cols-2">
-                  <Field label="Model">{`CreditRisk-v3`}</Field>
-                  <Field label="Version">{`3.4.1-prod`}</Field>
+                  <Field label="Model">CreditRisk-v3</Field>
+                  <Field label="Version">3.4.1-prod</Field>
                 </KeyValueGrid>
               </Panel>
             </div>
@@ -187,24 +185,22 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
 
         {/* ── Pipeline + results ──────────────────────────────────────────── */}
         <div className="space-y-4 xl:col-span-7">
-          <Panel title="Evidence capture pipeline" meta={pipelineStep === 0 ? 'idle' : `step ${pipelineStep} of 5`}>
+          <Panel title="Sealing pipeline" meta={pipelineStep === 0 ? 'idle' : `step ${pipelineStep} of 5`}>
             <ol className="grid gap-2 sm:grid-cols-5">
               {PIPELINE_STEPS.map((step, i) => {
                 const reached = pipelineStep >= i + 1;
                 return (
                   <li
                     key={step.label}
-                    className={`rounded-md border p-2.5 transition-colors ${
-                      reached ? 'border-accent-600/60 bg-accent-950/50' : 'border-line-700 bg-base-850'
+                    className={`border p-2.5 transition-colors ${
+                      reached ? 'border-ink-700 bg-paper-200' : 'border-rule-400 bg-paper-100'
                     }`}
+                    style={{ borderRadius: 2 }}
                   >
-                    <span className={`font-mono text-[10px] ${reached ? 'text-accent-300' : 'text-ink-500'}`}>
-                      {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <p className={`mt-0.5 text-[12px] font-medium leading-snug ${reached ? 'text-ink-100' : 'text-ink-400'}`}>
+                    <p className={`text-[12px] font-bold leading-snug ${reached ? 'text-ink-900' : 'text-ink-500'}`}>
                       {step.label}
                     </p>
-                    <p className="mt-0.5 truncate font-mono text-[10px] text-ink-500">{step.sub}</p>
+                    <p className="mt-0.5 truncate text-[10px] text-ink-500">{step.sub}</p>
                   </li>
                 );
               })}
@@ -214,27 +210,27 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
           {evaluationResult && recordResult ? (
             <div className="space-y-4">
               {/* Decision outcome */}
-              <Panel title="Decision" meta="autonomous model output">
+              <Panel title="The decision" meta="autonomous model output">
                 <div className="flex flex-wrap items-center justify-between gap-4">
                   <div className="flex items-center gap-3">
                     <StatusBadge tone={decisionTone(evaluationResult.decision)}>{evaluationResult.decision}</StatusBadge>
-                    <span className="font-mono text-xs text-ink-300">
-                      Confidence {((evaluationResult.metadata.confidenceScore ?? 0) * 100).toFixed(1)}%
+                    <span className="text-xs text-ink-600">
+                      Model confidence {((evaluationResult.metadata.confidenceScore ?? 0) * 100).toFixed(1)}%
                     </span>
                   </div>
                   <KeyValueGrid className="w-full sm:w-auto sm:grid-cols-3 sm:gap-6">
                     <Field label="Risk score">{evaluationResult.metadata.creditScore}</Field>
-                    <Field label="DTI">{`${evaluationResult.metadata.dtiRatio}%`}</Field>
+                    <Field label="Debt-to-income">{`${evaluationResult.metadata.dtiRatio}%`}</Field>
                     <Field label="Monthly income">${evaluationResult.metadata.monthlyIncome.toLocaleString()}</Field>
                   </KeyValueGrid>
                 </div>
-                <p className="mt-3 border-t border-line-700/60 pt-3 text-xs leading-relaxed text-ink-300">
+                <p className="mt-3 border-t border-rule-400 pt-3 text-xs leading-relaxed text-ink-700">
                   {evaluationResult.metadata.recommendationReason}
                 </p>
                 {evaluationResult.metadata.riskFactors.length > 0 && (
                   <ul className="mt-2 space-y-1">
                     {evaluationResult.metadata.riskFactors.map((rf) => (
-                      <li key={rf} className="font-mono text-[11px] text-warn-300">
+                      <li key={rf} className="text-[11px] text-annotation-500">
                         · {rf}
                       </li>
                     ))}
@@ -244,59 +240,65 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
 
               {recordResult.success && currentReceipt ? (
                 <Panel
-                  title="Evidence captured"
+                  title="Evidence sealed"
                   meta={currentReceipt.decisionId}
                   actions={
-                    <div className="flex gap-2">
+                    <div className="flex items-center gap-2">
                       <Button variant="ghost" onClick={() => onInspectReceipt(currentReceipt)}>
                         <FileJson2 className="h-4 w-4" />
                         Raw JSON
                       </Button>
                       {onNavigateToReceiptView && (
                         <Button variant="success" onClick={onNavigateToReceiptView}>
-                          Open receipt
+                          Open Receipt
                         </Button>
                       )}
                     </div>
                   }
                 >
-                  <ul className="mb-4 space-y-1.5 text-xs">
-                    <li className="flex items-center gap-2 text-ok-300">
-                      <CircleCheck className="h-3.5 w-3.5 text-ok-400" /> Evidence created at the decision boundary
+                  <div className="mb-4 flex items-center gap-3">
+                    <Stamp size="sm" angle={-3} tone="green" animate>
+                      Sealed
+                    </Stamp>
+                    <p className="text-xs text-ink-600">This receipt is now part of the case file.</p>
+                  </div>
+                  <ul className="mb-4 space-y-1.5 text-xs text-ink-700">
+                    <li className="flex items-center gap-2">
+                      <CircleCheck className="h-3.5 w-3.5 text-notary-600" /> Evidence created at the decision boundary
                     </li>
-                    <li className="flex items-center gap-2 text-ok-300">
-                      <CircleCheck className="h-3.5 w-3.5 text-ok-400" /> Cryptographic protection active
+                    <li className="flex items-center gap-2">
+                      <CircleCheck className="h-3.5 w-3.5 text-notary-600" /> Cryptographic protection active
                     </li>
-                    <li className="flex items-center gap-2 text-ok-300">
-                      <CircleCheck className="h-3.5 w-3.5 text-ok-400" /> Receipt generated and persisted
+                    <li className="flex items-center gap-2">
+                      <CircleCheck className="h-3.5 w-3.5 text-notary-600" /> Receipt generated and persisted
                     </li>
                   </ul>
-                  <div className="grid gap-3 border-t border-line-700/60 pt-3 sm:grid-cols-2">
+                  <div className="grid gap-3 border-t border-rule-400 pt-3 sm:grid-cols-2">
                     <CopyableValue
                       label="Receipt ID"
                       value={currentReceipt.decisionId}
                       display={shortHash(currentReceipt.decisionId, 22, 8)}
                     />
                     <CopyableValue
-                      label="SHA-256 combined commitment"
+                      label="Decision fingerprint (SHA-256)"
                       value={currentReceipt.privacyCommitment.combinedStateHash}
                       display={shortHash(currentReceipt.privacyCommitment.combinedStateHash, 22, 8)}
                     />
                   </div>
                 </Panel>
               ) : (
-                <Panel className="border-bad-500/50" title="Evidence capture failed">
+                <Panel className="border-stamp-500" title="Evidence capture failed">
                   <div className="flex items-start gap-3">
-                    <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-bad-400" />
+                    <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-stamp-500" />
                     <div className="min-w-0">
-                      <p className="text-[13px] font-medium text-bad-300">
-                        Decision completed — evidence protection failed
+                      <p className="text-[13px] font-bold text-stamp-600">
+                        The decision completed, but its evidence could not be sealed
                       </p>
-                      <p className="mt-1 text-xs leading-relaxed text-ink-300">
-                        Fail-closed policy: this decision is <span className="font-mono">not</span> marked as
-                        cryptographically protected. The decision result is not presented as verified evidence.
+                      <p className="mt-1 text-xs leading-relaxed text-ink-700">
+                        Fail-closed policy: this decision is not marked as cryptographically protected. The result is
+                        not presented as verified evidence.
                       </p>
-                      <p className="mt-2 break-words rounded border border-line-700 bg-base-950 p-2 font-mono text-[11px] text-bad-300">
+                      <p className="mt-2 break-words border border-rule-400 bg-paper-50 p-2 text-[11px] text-stamp-600" style={{ borderRadius: 2 }}>
                         {recordResult.error || 'Crypto commitment generation failed'}
                       </p>
                     </div>
@@ -307,7 +309,7 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
           ) : (
             <EmptyState
               title="No decision executed yet"
-              description={`Press "Run Decision" to evaluate ${customApplicant.applicantId} and capture a CooL evidence receipt.`}
+              description={`Press "Run Decision" to evaluate ${customApplicant.applicantId} and seal the first receipt for this applicant.`}
             />
           )}
         </div>

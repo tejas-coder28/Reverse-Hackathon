@@ -76,16 +76,16 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
   const columns: Array<DataTableColumn<LedgerRow>> = [
     {
       key: 'receipt',
-      header: 'Receipt ID',
+      header: 'Exhibit ref',
       render: (r) => (
         <div className="min-w-0">
-          <div className="font-mono text-xs text-accent-300">{shortHash(r.decisionId, 12, 6)}</div>
-          <div className="truncate font-mono text-[10px] text-ink-500">{r.applicantId}</div>
+          <div className="text-xs text-ink-700">{shortHash(r.decisionId, 12, 6)}</div>
+          <div className="truncate text-[10px] text-ink-500">{r.applicantId}</div>
         </div>
       ),
     },
-    { key: 'time', header: 'Time', render: (r) => <span className="font-mono text-ink-300">{formatClock(r.timestamp)}</span> },
-    { key: 'model', header: 'Model', render: (r) => <span className="font-mono text-[11px] text-ink-200">{r.modelId} · {r.modelVersion}</span> },
+    { key: 'time', header: 'Filed at', render: (r) => <span className="text-ink-600">{formatClock(r.timestamp)}</span> },
+    { key: 'model', header: 'Model', render: (r) => <span className="text-[11px] text-ink-900">{r.modelId} · {r.modelVersion}</span> },
     {
       key: 'decision',
       header: 'Decision',
@@ -93,9 +93,9 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
     },
     {
       key: 'commitment',
-      header: 'Commitment',
+      header: 'Fingerprint',
       render: (r) => (
-        <span className="font-mono text-[11px] text-ink-300" title={r.privacyCommitment.combinedStateHash}>
+        <span className="text-[11px] text-ink-600" title={r.privacyCommitment.combinedStateHash}>
           {shortHash(r.privacyCommitment.combinedStateHash, 8, 6)}
         </span>
       ),
@@ -107,14 +107,14 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
         const verification = verificationMap[r.decisionId];
         if (verifyingId === r.decisionId) {
           return (
-            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-accent-300">
+            <span className="inline-flex items-center gap-1.5 text-[10px] uppercase text-ink-700">
               <RefreshCw className="h-3 w-3 animate-spin" />
-              Verifying
+              Examining
             </span>
           );
         }
         if (!verification) {
-          return <span className="font-mono text-[10px] uppercase tracking-wider text-ink-500">Pending</span>;
+          return <span className="text-[10px] uppercase text-ink-500">Not examined</span>;
         }
         return verification.isUnforged ? (
           <StatusBadge tone="ok">Verified</StatusBadge>
@@ -135,7 +135,7 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
           <Button variant="ghost" onClick={() => onInspectReceipt(r)}>
             Open
           </Button>
-          <Button variant="ghost" onClick={() => handleExportJSON()}>
+          <Button variant="ghost" onClick={() => handleExportJSON()} aria-label="Export session receipts as JSON">
             <Download className="h-3.5 w-3.5" />
           </Button>
         </div>
@@ -146,9 +146,9 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
   return (
     <div className="space-y-6 pb-12">
       <SectionHeader
-        eyebrow="Verification Console"
-        title="Decision evidence ledger"
-        description="Every consequential decision recorded in this session with its cryptographic evidence status. Verification recomputes all five checks offline."
+        eyebrow="Docket · Session ledger"
+        title="Exhibits and their integrity status"
+        description="Every consequential decision recorded in this session with its cryptographic evidence status. The examiner recomputes all five checks offline."
         actions={
           <div className="flex items-center gap-2">
             <Button variant="secondary" onClick={loadData}>
@@ -167,39 +167,42 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
       <div className="grid gap-4 sm:grid-cols-3">
         <Panel bodyClassName="p-4">
           <div className="flex items-baseline justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Receipts logged</span>
-            <span className="font-mono text-2xl font-semibold text-ink-100">{receipts.length}</span>
+            <span className="text-[10px] uppercase text-ink-500">Receipts logged</span>
+            <span className="font-serif text-2xl font-bold text-ink-900">{receipts.length}</span>
           </div>
         </Panel>
         <Panel bodyClassName="p-4">
           <div className="flex items-baseline justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Verified authentic</span>
-            <span className="font-mono text-2xl font-semibold text-ok-300">{verifiedCount}</span>
+            <span className="text-[10px] uppercase text-ink-500">Verified authentic</span>
+            <span className="font-serif text-2xl font-bold text-notary-600">{verifiedCount}</span>
           </div>
         </Panel>
         <Panel bodyClassName="p-4">
           <div className="flex items-baseline justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Anomalies detected</span>
-            <span className={`font-mono text-2xl font-semibold ${anomalyCount > 0 ? 'text-bad-300' : 'text-ink-100'}`}>
+            <span className="text-[10px] uppercase text-ink-500">Anomalies detected</span>
+            <span className={`font-serif text-2xl font-bold ${anomalyCount > 0 ? 'text-stamp-600' : 'text-ink-900'}`}>
               {anomalyCount}
             </span>
           </div>
         </Panel>
-        <Panel className="sm:col-span-3 border-line-700/60" bodyClassName="p-3">
+        <Panel className="sm:col-span-3" bodyClassName="p-3">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
             <div className="relative flex-1">
               <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-500" />
               <input
                 type="text"
-                placeholder="Search applicant or receipt ID…"
+                placeholder="Search applicant or exhibit ref…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input pl-8"
               />
             </div>
             <div className="flex items-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Decision</span>
+              <label htmlFor="docket-decision-filter" className="text-[10px] uppercase text-ink-500">
+                Decision
+              </label>
               <select
+                id="docket-decision-filter"
                 value={filterDecision}
                 onChange={(e) => setFilterDecision(e.target.value)}
                 className="select w-44"
@@ -214,7 +217,7 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
         </Panel>
       </div>
 
-      <Panel title="Evidence ledger" meta={`${filteredReceipts.length} of ${receipts.length} receipts`} bodyClassName="p-0">
+      <Panel title="Session docket" meta={`${filteredReceipts.length} of ${receipts.length} receipts`} bodyClassName="p-0">
         <DataTable columns={columns} rows={filteredReceipts} emptyMessage="No receipts match the current search or filter." />
       </Panel>
     </div>
