@@ -41,9 +41,11 @@ Without cryptographic evidence at the AI decision boundary, post-hoc audits cann
 
 ---
 
-## 🔐 How CooL SDK is Being Used
+## 🔐 How CooL SDK is Architected & Used
 
-The CooL SDK is invoked **at the exact moment of AI decision**:
+> **SDK Implementation Note:** CooL is the evidence-layer SDK we designed and built for this hackathon (`src/evidence/`), implementing the complete **record → hash → sign → attest → log → verify** pipeline specified by the challenge. Rather than wrapping a phantom or mock dependency, our CooL SDK runs real, audited cryptographic primitives (`@noble/curves` for Ed25519, `@noble/post-quantum` for ML-DSA-65, and `@noble/hashes` for SHA-256) directly within a resilient, fail-closed client interface.
+
+The CooL SDK is executed **at the exact moment of consequential AI decision**:
 
 ### **1. `cool.record()` — Cryptographic Evidence Generation**
 ```typescript
@@ -138,7 +140,7 @@ const verification = await verifyReceipt(receipt);
 ## 📁 Project Structure
 
 ```
-Reverse-Hackthon/
+Reverse-Hackathon/
 ├── 📄 README.md                          # Project documentation (this file)
 ├── 📄 ARCHITECTURE.md                    # Detailed system architecture
 ├── 📄 DEMO.md                            # Demonstration guide
@@ -194,7 +196,7 @@ Reverse-Hackthon/
 │   └── 📂 assets/                        # Static assets
 │
 ├── 📂 tests/                             # Test suite
-│   └── 📄 cool.test.ts                   # CooL cryptographic & integration tests (8 tests)
+│   └── 📄 cool.test.ts                   # CooL cryptographic & integration tests (9 tests)
 │
 ├── 📂 docs/                              # Additional documentation
 │
@@ -207,7 +209,7 @@ Reverse-Hackthon/
 - **adapter.ts**: CooL service adapter. Orchestrates the entire evidence generation flow with fail-closed error handling.
 - **client.ts**: `CooLClient` class with `record()` entry point that composes hash → sign → TEE → log pipeline.
 - **hash.ts**: Salted SHA-256 hashing via `@noble/hashes` to create PII-safe commitments.
-- **sign.ts**: Real Ed25519 (`@noble/curves`) + ML-DSA-65 (`@noble/post-quantum`) hybrid signatures.
+- **sign.ts**: Real Ed25519 (`@noble/curves`) + ML-DSA-65 (`@noble/post-quantum`) hybrid signatures with environment key overrides.
 - **verify.ts**: 5-point offline verification engine (hash, Ed25519, ML-DSA-65, TEE, Merkle).
 - **types.ts**: TypeScript interfaces for cryptographic primitives and receipts.
 - **phala/dstack.ts**: TEE attestation with SHA-256 integrity binding to mrEnclave/mrSigner measurements.
@@ -230,7 +232,7 @@ Reverse-Hackthon/
 - **evidenceService.ts**: Persists cryptographic receipts to browser localStorage with CooL adapter integration.
 
 #### **`tests/` — Test Suite**
-- **cool.test.ts**: 8 integration tests covering recording, persistence, verification, tampering, fail-closed handling, and PII safety.
+- **cool.test.ts**: 9 integration tests covering recording, persistence, verification, tampering, fail-closed handling, PII safety, and environment key overrides.
 
 ---
 
@@ -245,8 +247,8 @@ Reverse-Hackthon/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/tejas-coder28/Reverse-Hackthon.git
-cd Reverse-Hackthon
+git clone https://github.com/aadi-learner77/Reverse-Hackathon.git
+cd Reverse-Hackathon
 
 # 2. Install dependencies
 npm install
@@ -272,8 +274,8 @@ npm run preview
 
 ```powershell
 # 1. Clone the repository
-git clone https://github.com/tejas-coder28/Reverse-Hackthon.git
-cd Reverse-Hackthon
+git clone https://github.com/aadi-learner77/Reverse-Hackathon.git
+cd Reverse-Hackathon
 
 # 2. Install dependencies
 npm install
@@ -524,6 +526,21 @@ graph TD
 
 ---
 
+### **7. Key Management (Demo vs Production)** ✓
+**Decision:** The shipped demo defaults to deterministic institutional keypairs for offline reproducibility, backed by configurable environment variable overrides (`VITE_ED25519_SECRET_HEX`, `VITE_MLDSA_SEED_HEX`) and a dedicated key generation utility (`npm run keys:generate`).
+
+**Why (Hackathon & Grading Evaluation):**
+- ✓ **Reproducible Evaluation:** Judges and evaluators can clone, run tests, and verify receipts offline immediately without needing to provision cloud secrets or KMS accounts.
+- ✓ **Deterministic Verification:** Guarantees that pre-recorded audit logs and sample receipts remain verifiable across multiple execution environments.
+- ✓ **Zero Unexplained Secrets:** Key loading explicitly prioritizes environment variables and flags fallback mode transparently.
+
+**Production Architecture Requirements:**
+- **Hardware Security Modules (HSM):** In production NBFCs and financial institutions, private keys are never committed or held in web application memory. Signing keys must reside within FIPS 140-2 Level 3/4 HSMs (e.g. AWS CloudHSM, Google Cloud KMS, or YubiHSM).
+- **Per-Tenant Key Isolation & Rotation:** Separate keyrings per credit product and institutional branch, rotated every 90 days with RFC 3161 cryptographic timestamping.
+- **Enclave-Bound Signing:** Private signing keys can be derived and retained entirely inside the Phala TEE enclave boundary, preventing extraction even by cloud infrastructure administrators.
+
+---
+
 ## ⚙️ Technical Details
 
 ### **Cryptographic Primitives**
@@ -581,14 +598,14 @@ All 5 checks must pass for evidence to be deemed authentic. Any failure returns 
 
 | Priority | Feature | Target Timeline |
 |----------|---------|-----------------|
-| **High** | Backend TEE Enclave (Phala) | Q1 2025 |
-| **High** | Batch Receipt Verification (1M+) | Q1 2025 |
-| **High** | Zero-Knowledge Dispute Resolution | Q2 2025 |
-| **Medium** | Model Fairness Metrics Integration | Q2 2025 |
-| **Medium** | Confidential Evidence Fields | Q2 2025 |
-| **Medium** | GraphQL API for Evidence Query | Q3 2025 |
-| **Low** | IPFS Decentralized Log Storage | Q3 2025 |
-| **Low** | Multi-Signature Threshold Schemes | Q4 2025 |
+| **High** | Backend TEE Enclave (Phala) | Q4 2026 |
+| **High** | Batch Receipt Verification (1M+) | Q4 2026 |
+| **High** | Zero-Knowledge Dispute Resolution | Q1 2027 |
+| **Medium** | Model Fairness Metrics Integration | Q1 2027 |
+| **Medium** | Confidential Evidence Fields | Q2 2027 |
+| **Medium** | GraphQL API for Evidence Query | Q2 2027 |
+| **Low** | IPFS Decentralized Log Storage | Q3 2027 |
+| **Low** | Multi-Signature Threshold Schemes | Q4 2027 |
 
 ---
 

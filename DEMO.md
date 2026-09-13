@@ -52,7 +52,7 @@
 # Local Development
 npm run dev
 
-# Run Vitest Suite (8/8 tests pass)
+# Run Vitest Suite (9/9 tests pass)
 npx vitest run
 
 # Production Build
