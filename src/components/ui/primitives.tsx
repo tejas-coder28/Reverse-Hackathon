@@ -2,29 +2,22 @@ import React, { useState } from 'react';
 import { Check, Copy } from 'lucide-react';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   CooL.ledger shared UI primitives — enterprise security console styling.
+   CooL.ledger shared UI primitives — "The Evidence Room"
+   Documents on a manila folder. Typewriter ink, hairline rules, rubber stamps.
    Presentation only: no product logic lives here.
-   ═══════════════════════════════════════════════════════════════════════════ */
+   ═════════════════════════════════════════════════════════════ alternating paper tones */
 
 export type BadgeTone = 'ok' | 'warn' | 'bad' | 'accent' | 'neutral';
 
 const BADGE_TONES: Record<BadgeTone, string> = {
-  ok: 'border-ok-900 bg-ok-950 text-ok-300',
-  warn: 'border-warn-900 bg-warn-950 text-warn-300',
-  bad: 'border-bad-900 bg-bad-950 text-bad-300',
-  accent: 'border-accent-600/50 bg-accent-950 text-accent-300',
-  neutral: 'border-line-700 bg-base-850 text-ink-300',
+  ok: 'border-notary-500 text-notary-600',
+  warn: 'border-annotation-500 text-annotation-500',
+  bad: 'border-stamp-500 text-stamp-600',
+  accent: 'border-rule-500 text-ink-700',
+  neutral: 'border-rule-400 text-ink-600',
 };
 
-const BADGE_DOTS: Record<BadgeTone, string> = {
-  ok: 'bg-ok-400',
-  warn: 'bg-warn-400',
-  bad: 'bg-bad-400',
-  accent: 'bg-accent-400',
-  neutral: 'bg-ink-400',
-};
-
-/* ── StatusBadge ───────────────────────────────────────────────────────────── */
+/* ── StatusBadge — a typed margin annotation, not a status pill ─────────────── */
 export function StatusBadge({
   tone,
   children,
@@ -38,28 +31,71 @@ export function StatusBadge({
 }) {
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded border px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider ${BADGE_TONES[tone]} ${className}`}
+      className={`inline-flex items-center gap-1.5 border px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase ${BADGE_TONES[tone]} ${className}`}
+      style={{ borderRadius: 2 }}
     >
-      {withDot && <span className={`h-1.5 w-1.5 rounded-full ${BADGE_DOTS[tone]}`} />}
+      {withDot && <span className={`h-1.5 w-1.5 ${tone === 'bad' ? 'bg-stamp-500' : tone === 'ok' ? 'bg-notary-500' : tone === 'warn' ? 'bg-annotation-500' : 'bg-ink-400'}`} />}
       {children}
     </span>
   );
 }
 
-/* ── Button ────────────────────────────────────────────────────────────────── */
+/* ── Stamp — the one bold move. Rotated ink-on-paper verdict seal. ──────────── */
+export function Stamp({
+  children,
+  tone = 'red',
+  size = 'md',
+  angle = -4,
+  animate = false,
+  className = '',
+}: {
+  children: React.ReactNode;
+  tone?: 'red' | 'green' | 'gray';
+  size?: 'sm' | 'md' | 'lg';
+  angle?: number;
+  animate?: boolean;
+  className?: string;
+}) {
+  const toneCls =
+    tone === 'red'
+      ? 'border-stamp-500 text-stamp-500'
+      : tone === 'green'
+        ? 'border-notary-500 text-notary-500'
+        : 'border-rule-500 text-ink-600';
+  const sizeCls =
+    size === 'lg'
+      ? 'text-3xl sm:text-4xl px-6 py-3 border-[3px]'
+      : size === 'sm'
+        ? 'text-sm px-2.5 py-1 border-2'
+        : 'text-xl px-4 py-2 border-2';
+  return (
+    <span
+      className={`inline-block font-serif font-bold uppercase ${toneCls} ${sizeCls} ${animate ? 'animate-stamp' : ''} ${className}`}
+      style={{
+        borderRadius: 4,
+        transform: `rotate(${angle}deg)`,
+        ['--stamp-rot' as string]: `${angle}deg`,
+        boxShadow: 'inset 0 0 10px rgba(163, 39, 30, 0.04)',
+        maskImage:
+          "radial-gradient(ellipse at 30% 60%, black 55%, rgba(0,0,0,0.92) 70%, black 100%), linear-gradient(105deg, black 0%, rgba(0,0,0,0.9) 40%, black 70%, rgba(0,0,0,0.94) 100%)",
+        WebkitMaskImage:
+          "radial-gradient(ellipse at 30% 60%, black 55%, rgba(0,0,0,0.92) 70%, black 100%), linear-gradient(105deg, black 0%, rgba(0,0,0,0.9) 40%, black 70%, rgba(0,0,0,0.94) 100%)",
+      }}
+    >
+      {children}
+</span>
+  );
+}
+
+/* ── Button — rectangular stamp-plate controls. No shadows, no arrows. ─────── */
 type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'success';
 
 const BUTTON_VARIANTS: Record<ButtonVariant, string> = {
-  primary:
-    'bg-accent-600 text-white border border-accent-500 hover:bg-accent-500 focus-visible:border-accent-300',
-  secondary:
-    'bg-base-800 text-ink-100 border border-line-700 hover:bg-base-700 hover:border-line-600',
-  ghost:
-    'bg-transparent text-ink-300 border border-transparent hover:bg-base-800 hover:text-ink-100',
-  danger:
-    'bg-bad-900 text-bad-300 border border-bad-500/60 hover:bg-bad-500/20 hover:border-bad-400',
-  success:
-    'bg-ok-900 text-ok-300 border border-ok-400/50 hover:bg-ok-400/15 hover:border-ok-300',
+  primary: 'bg-ink-900 text-paper-100 border border-ink-900 hover:bg-ink-700 hover:border-ink-700',
+  secondary: 'bg-paper-100 text-ink-900 border border-rule-500 hover:border-rule-600 hover:bg-paper-200',
+  ghost: 'bg-transparent text-ink-600 border border-transparent hover:bg-paper-200 hover:text-ink-900',
+  danger: 'bg-paper-100 text-stamp-600 border border-stamp-500 hover:bg-stamp-50 hover:border-stamp-600',
+  success: 'bg-paper-100 text-notary-600 border border-notary-500 hover:bg-notary-50',
 };
 
 export function Button({
@@ -70,15 +106,16 @@ export function Button({
 }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: ButtonVariant }) {
   return (
     <button
-      className={`inline-flex select-none items-center justify-center gap-1.5 rounded-md px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-wide transition-colors focus-visible:outline focus-visible:outline-1 focus-visible:outline-accent-400 disabled:cursor-not-allowed disabled:opacity-40 ${BUTTON_VARIANTS[variant]} ${className}`}
+      className={`inline-flex select-none items-center justify-center gap-1.5 px-3 py-1.5 font-mono text-xs font-medium uppercase tracking-wide transition-colors disabled:cursor-not-allowed disabled:opacity-40 ${BUTTON_VARIANTS[variant]} ${className}`}
+      style={{ borderRadius: 2 }}
       {...rest}
     >
       {children}
-    </button>
+  </button>
   );
 }
 
-/* ── Panel ─────────────────────────────────────────────────────────────────── */
+/* ── Panel — a document sheet. Sharp 2px corners, hairline rule, header underline. */
 export function Panel({
   title,
   actions,
@@ -95,20 +132,21 @@ export function Panel({
   bodyClassName?: string;
 }) {
   return (
-    <section className={`overflow-hidden rounded-lg border border-line-700 bg-base-900 ${className}`}>
+    <section
+      className={`overflow-hidden border border-rule-400 bg-paper-100 ${className}`}
+      style={{ borderRadius: 2 }}
+    >
       {(title || actions) && (
-        <header className="flex min-h-[42px] flex-wrap items-center justify-between gap-2 border-b border-line-700 bg-base-850 px-4 py-2">
-          <div className="flex items-center gap-3">
+        <header className="flex min-h-[42px] flex-wrap items-center justify-between gap-2 border-b border-rule-400 px-4 py-2">
+          <div className="flex min-w-0 items-center gap-3">
             {typeof title === 'string' ? (
-              <h3 className="font-mono text-[11px] font-semibold uppercase tracking-wider text-ink-300">
-                {title}
-              </h3>
+              <h3 className="text-[11px] font-bold uppercase tracking-[0.08em] text-ink-700">{title}</h3>
             ) : (
               title
             )}
-            {meta && <span className="font-mono text-[10px] text-ink-500">{meta}</span>}
+            {meta && <span className="truncate text-[10px] text-ink-500">{meta}</span>}
           </div>
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
         </header>
       )}
       <div className={bodyClassName || 'p-4'}>{children}</div>
@@ -116,7 +154,7 @@ export function Panel({
   );
 }
 
-/* ── SectionHeader ─────────────────────────────────────────────────────────── */
+/* ── SectionHeader — a typed file tab, not an eyebrow. ──────────────────────── */
 export function SectionHeader({
   eyebrow,
   title,
@@ -130,16 +168,16 @@ export function SectionHeader({
 }) {
   return (
     <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-      <div>
+      <div className="min-w-0">
         {eyebrow && (
-          <div className="font-mono text-[11px] font-medium uppercase tracking-widest text-accent-400">
+          <div className="mb-1 inline-block border border-rule-500 bg-paper-200 px-2 py-0.5 text-[11px] font-bold uppercase tracking-[0.08em] text-ink-700">
             {eyebrow}
           </div>
         )}
-        <h2 className="mt-0.5 text-xl font-semibold text-ink-100">{title}</h2>
-        {description && <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-ink-300">{description}</p>}
+        <h2 className="text-xl font-bold text-ink-900">{title}</h2>
+        {description && <p className="mt-1 max-w-3xl text-[13px] leading-relaxed text-ink-600">{description}</p>}
       </div>
-      {actions && <div className="flex shrink-0 items-center gap-2">{actions}</div>}
+      {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </div>
   );
 }
@@ -159,12 +197,12 @@ export function Field({
   return (
     <div className={`min-w-0 ${className}`}>
       <dt className="label">{label}</dt>
-      <dd className={`mt-0.5 truncate text-xs text-ink-100 ${mono ? 'font-mono' : ''}`}>{children}</dd>
+      <dd className={`mt-0.5 truncate text-xs text-ink-900 ${mono ? 'font-mono' : ''}`}>{children}</dd>
     </div>
   );
 }
 
-/* ── CopyableValue ─────────────────────────────────────────────────────────── */
+/* ── CopyableValue — typed hash line with a copy control ────────────────────── */
 export function CopyableValue({
   value,
   display,
@@ -190,10 +228,7 @@ export function CopyableValue({
     <span className={`group/copy inline-flex max-w-full min-w-0 items-center gap-1.5 ${className}`}>
       <span className="min-w-0 flex-1">
         {label && <span className="label mb-0.5 block">{label}</span>}
-        <code
-          className="block cursor-text truncate font-mono text-xs text-accent-300"
-          title={value}
-        >
+        <code className="block cursor-text truncate font-mono text-xs text-ink-700" title={value}>
           {display ?? value}
         </code>
       </span>
@@ -202,15 +237,15 @@ export function CopyableValue({
         onClick={handleCopy}
         aria-label={copied ? 'Copied' : 'Copy value'}
         title={copied ? 'Copied' : 'Copy'}
-        className="shrink-0 rounded border border-transparent p-1 text-ink-400 transition-colors hover:border-line-700 hover:text-ink-100"
+        className="shrink-0 border border-transparent p-1 text-ink-500 transition-colors hover:border-rule-400 hover:text-ink-900"
       >
-        {copied ? <Check className="h-3.5 w-3.5 text-ok-400" /> : <Copy className="h-3.5 w-3.5" />}
+        {copied ? <Check className="h-3.5 w-3.5 text-notary-500" /> : <Copy className="h-3.5 w-3.5" />}
       </button>
     </span>
   );
 }
 
-/* ── EmptyState ────────────────────────────────────────────────────────────── */
+/* ── EmptyState — an empty evidence folder ──────────────────────────────────── */
 export function EmptyState({
   title,
   description,
@@ -221,17 +256,20 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-line-700 bg-base-900/50 px-6 py-14 text-center">
-      <p className="text-sm font-medium text-ink-200">{title}</p>
+    <div
+      className="flex flex-col items-center justify-center border border-dashed border-rule-500 bg-paper-100/60 px-6 py-14 text-center"
+      style={{ borderRadius: 2 }}
+    >
+      <p className="font-serif text-sm font-bold text-ink-700">{title}</p>
       {description && (
-        <p className="mt-1.5 max-w-md font-mono text-xs leading-relaxed text-ink-400">{description}</p>
+        <p className="mt-1.5 max-w-md text-xs leading-relaxed text-ink-500">{description}</p>
       )}
       {action && <div className="mt-4">{action}</div>}
     </div>
   );
 }
 
-/* ── KeyValueTable (dense definition grid used across evidence views) ──────── */
+/* ── KeyValueGrid — dense typed definition grid ─────────────────────────────── */
 export function KeyValueGrid({ children, className = '' }: { children: React.ReactNode; className?: string }) {
   return <dl className={`grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-3 lg:grid-cols-4 ${className}`}>{children}</dl>;
 }
