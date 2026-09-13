@@ -101,7 +101,7 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
 
       <div className="grid gap-4 xl:grid-cols-12">
         {/* ── The exhibit body — cryptographic evidence ──────────────────── */}
-        <div className="space-y-4 xl:col-span-7">
+        <div className="min-w-0 space-y-4 xl:col-span-7">
           <Panel title="Sealed state" meta="what the model saw and ruled, fingerprinted">
             <div className="space-y-3">
               <div className="border border-rule-400 bg-paper-50 p-3" style={{ borderRadius: 2 }}>
@@ -209,7 +209,7 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
         </div>
 
         {/* ── The lab report — offline verification ──────────────────────── */}
-        <div className="space-y-4 xl:col-span-5">
+        <div className="min-w-0 space-y-4 xl:col-span-5">
           <Panel title="The examination" meta="zero vendor API calls">
             <p className="mb-3 text-xs leading-relaxed text-ink-600">
               Five independent checks must pass for this evidence to be considered authentic. The examination

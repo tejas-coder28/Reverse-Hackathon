@@ -115,7 +115,7 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
 
       <div className="grid gap-4 xl:grid-cols-12">
         {/* ── Intake form ─────────────────────────────────────────────────── */}
-        <Panel className="xl:col-span-5" title="Applicant file" meta="synthetic data — salted before storage">
+        <Panel className="min-w-0 xl:col-span-5" title="Applicant file" meta="synthetic data — salted before storage">
           <div className="space-y-4">
             <div>
               <label className="label" htmlFor="fld-id">
@@ -184,7 +184,7 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({
         </Panel>
 
         {/* ── Pipeline + results ──────────────────────────────────────────── */}
-        <div className="space-y-4 xl:col-span-7">
+        <div className="min-w-0 space-y-4 xl:col-span-7">
           <Panel title="Sealing pipeline" meta={pipelineStep === 0 ? 'idle' : `step ${pipelineStep} of 5`}>
             <ol className="grid gap-2 sm:grid-cols-5">
               {PIPELINE_STEPS.map((step, i) => {

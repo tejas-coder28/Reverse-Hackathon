@@ -134,7 +134,7 @@ export const TamperLabTab: React.FC = () => {
 
       <div className="grid gap-4 xl:grid-cols-12">
         {/* ── Charge sheet + payload editor ───────────────────────────────── */}
-        <div className="space-y-4 xl:col-span-5">
+        <div className="min-w-0 space-y-4 xl:col-span-5">
           <Panel title="Ways to contaminate the exhibit" meta="choose one and the examiner reacts">
             <ul className="space-y-1.5">
               {tamperScenarios.map((s) => (
@@ -254,7 +254,7 @@ export const TamperLabTab: React.FC = () => {
         </div>
 
         {/* ── Before/after + verdict ──────────────────────────────────────── */}
-        <div className="space-y-4 xl:col-span-7">
+        <div className="min-w-0 space-y-4 xl:col-span-7">
           <Panel
             title="Original vs altered copy"
             meta={<FileDiff className="h-4 w-4 text-ink-500" />}
