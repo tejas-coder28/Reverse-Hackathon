@@ -115,7 +115,7 @@ const verification = verifyReceipt(receipt);
 
 ## ⭐ Why CooL is Important to Our Solution
 
-> **"At the consequential AI decision boundary, CooL creates the cryptographic evidence that the rest of the application audits. Without this evidence layer, the application falls back to ordinary[...]"**
+> **"At the consequential AI decision boundary, CooL creates the cryptographic evidence that the rest of the application audits. Without this evidence layer, the application falls back to ordinary logs."**
 
 | Challenge | Without CooL | With CooL |
 |-----------|-------------|----------|
@@ -131,6 +131,115 @@ const verification = verifyReceipt(receipt);
 - **Fairness & Accountability:** Proves whether discriminatory decisions were corrected post-hoc
 - **Fraud Prevention:** Any attempt to backdate or modify a decision is cryptographically detectable
 - **Model Governance:** Evidence chains decisions to specific model versions & parameters
+
+---
+
+## 📁 Project Structure
+
+```
+Reverse-Hackthon/
+├── 📄 README.md                          # Project documentation (this file)
+├── 📄 ARCHITECTURE.md                    # Detailed system architecture
+├── 📄 DEMO.md                            # Demonstration guide
+├── 📄 SECURITY.md                        # Security considerations
+├── 📄 LICENSE                            # MIT License
+├── 📄 package.json                       # Node.js dependencies & scripts
+├── 📄 package-lock.json                  # Dependency lock file
+├── 📄 vite.config.ts                     # Vite build configuration
+├── 📄 vercel.json                        # Vercel deployment config
+├── 📄 tsconfig.json                      # TypeScript base config
+├── 📄 tsconfig.app.json                  # TypeScript app config
+├── 📄 tsconfig.node.json                 # TypeScript Node config
+├── 📄 .env.example                       # Environment variables template
+├── 📄 .gitignore                         # Git ignore rules
+├── 📄 .oxlintrc.json                     # Oxlint configuration
+├── 📄 index.html                         # Entry HTML file
+│
+├── 📂 src/                               # Main application source code
+│   ├── 📄 main.tsx                       # Application entry point
+│   ├── 📄 App.tsx                        # Root React component (main dashboard)
+│   ├── 📄 index.css                      # Global styles
+│   │
+│   ├── 📂 components/                    # React UI components
+│   │   ├── 📄 EvidenceTab.tsx            # Evidence explorer UI
+│   │   ├── 📄 TamperLabTab.tsx           # Tamper demonstration interface
+│   │   ├── 📄 CreditDecisionCard.tsx     # Credit decision display component
+│   │   ├── 📄 VerificationPanel.tsx      # Receipt verification display
+│   │   └── 📄 [other UI components]
+│   │
+│   ├── 📂 cool/                          # CooL SDK cryptographic core
+│   │   ├── 📄 adapter.ts                 # CooL SDK invocation & adaptation layer
+│   │   ├── 📄 hash.ts                    # Salted SHA-256 commitment hashing
+│   │   ├── 📄 sign.ts                    # Ed25519 + ML-DSA-65 hybrid signatures
+│   │   ├── 📄 verify.ts                  # 5-point offline verification engine
+│   │   ├── 📄 types.ts                   # TypeScript cryptographic types
+│   │   │
+│   │   └── 📂 phala/                     # Phala Network TEE integration
+│   │       ├── 📄 dstack.ts              # TEE attestation (dstack quotes)
+│   │       └── 📄 log.ts                 # RFC 6962 transparency log management
+│   │
+│   ├── 📂 model/                         # AI Credit Decision Model
+│   │   ├── 📄 creditModel.ts             # Autonomous credit risk scoring logic
+│   │   ├── 📄 types.ts                   # Input/output data types
+│   │   └── 📄 sampleData.ts              # Synthetic applicant data generator
+│   │
+│   ├── 📂 services/                      # Application services
+│   │   ├── 📄 evidenceService.ts         # Receipt persistence & retrieval
+│   │   ├── 📄 auditService.ts            # Audit trail management
+│   │   └── 📄 storage.ts                 # Local storage abstraction
+│   │
+│   └── 📂 assets/                        # Static assets
+│       ├── 📄 logo.svg
+│       └── 📄 [other images]
+│
+├── 📂 tests/                             # Test suite
+│   ├── 📄 cool.test.ts                   # CooL cryptographic tests
+│   ├── 📄 verify.test.ts                 # Verification engine tests
+│   ├── 📄 creditModel.test.ts            # AI model logic tests
+│   └── 📄 integration.test.ts            # End-to-end integration tests
+│
+├── 📂 docs/                              # Additional documentation
+│   ├── 📄 API.md                         # API documentation
+│   ├── 📄 CONTRIBUTING.md                # Contribution guidelines
+│   └── 📄 CRYPTOGRAPHY.md                # Detailed crypto explanations
+│
+└── 📂 public/                            # Public static files
+    └── 📄 [static assets]
+```
+
+### **Directory Descriptions**
+
+#### **`src/cool/` — Cryptographic Evidence Core**
+- **adapter.ts**: Main entry point for CooL SDK. Orchestrates the entire evidence generation flow.
+- **hash.ts**: Implements salted SHA-256 hashing to create PII-safe commitments.
+- **sign.ts**: Generates dual Ed25519 + ML-DSA-65 signatures for evidence sealing.
+- **verify.ts**: Implements the 5-point cryptographic verification checklist.
+- **types.ts**: TypeScript interfaces for cryptographic primitives and receipts.
+- **phala/dstack.ts**: Integrates with Phala Network for TEE attestations.
+- **phala/log.ts**: Manages RFC 6962 transparency log entries and Merkle proofs.
+
+#### **`src/components/` — User Interface**
+- **EvidenceTab.tsx**: Interactive explorer for viewing and searching cryptographic receipts.
+- **TamperLabTab.tsx**: Demonstration lab showing how tampering is detected.
+- **CreditDecisionCard.tsx**: Displays AI credit decisions in a readable format.
+- **VerificationPanel.tsx**: Shows real-time verification results (pass/fail for each of 5 checks).
+- Other components for dashboard layout, navigation, and forms.
+
+#### **`src/model/` — AI Decision Model**
+- **creditModel.ts**: Autonomous neural network or decision tree for credit risk scoring.
+- **types.ts**: TypeScript definitions for applicant data and credit decisions.
+- **sampleData.ts**: Generates synthetic test applicants for demo purposes.
+
+#### **`src/services/` — Backend Logic**
+- **evidenceService.ts**: Persists cryptographic receipts to browser local storage or backend DB.
+- **auditService.ts**: Manages audit trails and querying historical decisions.
+- **storage.ts**: Abstraction layer for storage (local, indexed DB, API, etc.).
+
+#### **`tests/` — Test Suite**
+- **cool.test.ts**: Unit tests for hashing, signing, verification, and evidence generation.
+- **verify.test.ts**: Tests for the 5-point verification engine (happy path + tampering scenarios).
+- **creditModel.test.ts**: Tests for AI model logic and edge cases.
+- **integration.test.ts**: End-to-end tests of the full workflow from decision to audit.
 
 ---
 
