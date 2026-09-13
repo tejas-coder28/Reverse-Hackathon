@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertOctagon, RefreshCcw, CheckCircle2, AlertTriangle, FileCode2, Edit3, XCircle } from 'lucide-react';
+import { AlertOctagon, RefreshCcw, CheckCircle2, AlertTriangle, FileCode2, Edit3, XCircle, Shield } from 'lucide-react';
 import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
 import { evidenceService } from '../services/evidenceService';
 
@@ -99,6 +99,15 @@ export const TamperLabTab: React.FC = () => {
           <RefreshCcw className="h-4 w-4" />
           <span>Restore Original</span>
         </button>
+      </div>
+
+      {/* CORE JUDGE PROOF STATEMENT BANNER */}
+      <div className="rounded-2xl border border-amber-500/40 bg-gradient-to-r from-slate-950 via-amber-950/30 to-slate-950 p-4 font-mono text-xs text-amber-200 flex items-start space-x-3 shadow-lg">
+        <Shield className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
+        <div className="leading-relaxed">
+          <strong className="text-white font-bold block mb-0.5">CORE CRYPTOGRAPHIC AUDIT PRINCIPLE:</strong>
+          "The AI decision may still be right or wrong. What we prove is whether the evidence describing what happened has been altered."
+        </div>
       </div>
 
       {/* Attack Scenario Selection Bar */}

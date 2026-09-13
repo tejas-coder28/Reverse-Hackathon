@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, ShieldCheck, Check, Copy, Terminal, AlertOctagon, Lock, Key, Info, Code, CheckCircle2 } from 'lucide-react';
+import { FileText, ShieldCheck, Check, Copy, Terminal, AlertOctagon, Lock, Key, Info, Code, CheckCircle2, Shield } from 'lucide-react';
 import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
 import { evidenceService } from '../services/evidenceService';
 
@@ -46,7 +46,7 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="text-xs font-mono font-bold tracking-wider text-emerald-400 uppercase mb-1">
-            MOST IMPORTANT PAGE — EVIDENCE RECEIPT INSPECTOR
+            EVIDENCE RECEIPT INSPECTOR
           </div>
           <h2 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-2 font-sans">
             <FileText className="h-7 w-7 text-emerald-400" />
@@ -64,6 +64,15 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
           <Code className="h-4 w-4" />
           <span>Inspect Full Raw Receipt JSON</span>
         </button>
+      </div>
+
+      {/* CORE JUDGE PROOF STATEMENT BANNER */}
+      <div className="rounded-2xl border border-cyan-500/40 bg-gradient-to-r from-slate-950 via-cyan-950/40 to-slate-950 p-4 font-mono text-xs text-cyan-200 flex items-start space-x-3 shadow-lg">
+        <Shield className="h-5 w-5 text-cyan-400 shrink-0 mt-0.5" />
+        <div className="leading-relaxed">
+          <strong className="text-white font-bold block mb-0.5">CORE CRYPTOGRAPHIC AUDIT PRINCIPLE:</strong>
+          "The AI decision may still be right or wrong. What we prove is whether the evidence describing what happened has been altered."
+        </div>
       </div>
 
       {/* Main Grid Layout */}
@@ -259,11 +268,11 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
                     <AlertOctagon className="h-8 w-8 text-rose-400 shrink-0" />
                   )}
                   <div>
-                    <div className="text-xs uppercase font-mono tracking-wider text-slate-400">Verification Result</div>
+                    <div className="text-xs uppercase font-mono tracking-wider text-slate-400 font-bold">CRYPTOGRAPHIC EVIDENCE</div>
                     <div className={`text-xl font-black font-mono ${
                       verificationResult.isUnforged ? 'text-emerald-400' : 'text-rose-400'
                     }`}>
-                      {verificationResult.isUnforged ? 'EVIDENCE UNFORGED' : 'VERIFICATION FAILED'}
+                      {verificationResult.isUnforged ? '✓ VALID (EVIDENCE UNFORGED)' : 'VERIFICATION FAILED'}
                     </div>
                   </div>
                 </div>
@@ -286,7 +295,7 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
                   </div>
                 )}
 
-                {/* Scope Disclaimer (REQUIRED) */}
+                {/* Scope Disclaimer */}
                 <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 flex items-start space-x-2 text-[11px] text-slate-400 leading-relaxed font-mono">
                   <Info className="h-4 w-4 text-cyan-400 shrink-0 mt-0.5" />
                   <span>

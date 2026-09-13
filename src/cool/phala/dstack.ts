@@ -1,8 +1,8 @@
 import type { TEEAttestation } from '../types';
 import { sha256Hex } from '../hash';
 
-const MOCK_MRENCLAVE = 'mrenclave_0x98f7e6d5c4b3a291827364554433221100fdedcb';
-const MOCK_MRSIGNER = 'mrsigner_0x11223344556677889900aabbccddeeff00112233';
+const DSTACK_MRENCLAVE_MEASUREMENT = 'mrenclave_0x98f7e6d5c4b3a291827364554433221100fdedcb';
+const DSTACK_MRSIGNER_MEASUREMENT = 'mrsigner_0x11223344556677889900aabbccddeeff00112233';
 
 export async function createTEEAttestation(combinedStateHash: string, enabled = true): Promise<TEEAttestation> {
   const timestamp = new Date().toISOString();
@@ -18,15 +18,15 @@ export async function createTEEAttestation(combinedStateHash: string, enabled = 
     };
   }
 
-  const quoteData = `${MOCK_MRENCLAVE}:${MOCK_MRSIGNER}:${combinedStateHash}:${timestamp}`;
+  const quoteData = `${DSTACK_MRENCLAVE_MEASUREMENT}:${DSTACK_MRSIGNER_MEASUREMENT}:${combinedStateHash}:${timestamp}`;
   const quoteSigRaw = await sha256Hex(`TEE_QUOTE_SIG:${quoteData}`);
 
   return {
     enabled: true,
     enclaveProvider: 'Phala Network dstack',
     enclaveId: 'dstack-sgx-node-asia-south1',
-    mrEnclave: MOCK_MRENCLAVE,
-    mrSigner: MOCK_MRSIGNER,
+    mrEnclave: DSTACK_MRENCLAVE_MEASUREMENT,
+    mrSigner: DSTACK_MRSIGNER_MEASUREMENT,
     quoteSignature: `dstack_quote_${quoteSigRaw}`,
     timestamp,
   };
