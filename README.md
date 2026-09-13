@@ -627,4 +627,4 @@ We welcome contributions! Please:
 
 ---
 
-**Built for the Reverse Hackathon | CooL.ledger Team**
+**Built for the Reverse Hackathon | Team Beta Onepiece**
