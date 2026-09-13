@@ -1,112 +1,167 @@
 @import "tailwindcss";
 
-/* ─────────────────────────────────────────────────────────────────────────────
-   CooL.ledger design tokens — enterprise security console
-   Restrained dark navy surfaces, one accent (cyan/teal), semantic state colors.
-   ───────────────────────────────────────────────────────────────────────────── */
+/* ═════════════════════════════════════════════════════════════════════════════
+   CooL.ledger — "The Evidence Room" design tokens
+   Genre: forensic case file. Surfaces are paper on a manila folder; text is
+   typewriter ink; verdicts are rubber stamps in red or notary green.
+   Two typefaces: Libre Caslon Text (institutional serif) + Courier Prime
+   (typewriter mono). Presentation layer only.
+   ═══════════════════════════════════════════ radii: 1–2px, shadows: hard offset */
+
 @theme {
-  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Typefaces */
+  --font-serif: "Libre Caslon Text", "Iowan Old Style", Georgia, serif;
+  --font-mono: "Courier Prime", "Courier New", ui-monospace, monospace;
 
-  /* Base scale — near-black navy → charcoal steps */
-  --color-base-950: #060a12;
-  --color-base-900: #0a0f1a;
-  --color-base-850: #0d1421;
-  --color-base-800: #111a2b;
-  --color-base-750: #162032;
-  --color-base-700: #1a2537;
+  /* Paper surfaces */
+  --color-folder-500: #e7dabc; /* manila folder — page background */
+  --color-folder-600: #ddcdaa; /* folder crease / deeper manila */
+  --color-paper-50: #f8f3e6; /* freshest bond paper — hero sheet */
+  --color-paper-100: #f5efdf; /* bond paper — document surface */
+  --color-paper-200: #ede3c9; /* carbon-copy backing sheet */
+  --color-paper-300: #e2d4b0; /* aged edge */
 
-  /* Text */
-  --color-ink-100: #e8edf4;
-  --color-ink-200: #c3cddb;
-  --color-ink-300: #9aa7ba;
-  --color-ink-400: #6e7d93;
-  --color-ink-500: #4c5a70;
+  /* Ink */
+  --color-ink-900: #23201a; /* typewriter ink — primary text */
+  --color-ink-700: #4a4436; /* firm secondary */
+  --color-ink-600: #5f5743; /* carbon copy — meta text, rules */
+  --color-ink-500: #7a7057; /* faint annotations */
 
-  /* Borders — low-contrast blue-gray */
-  --color-line-700: #243146;
-  --color-line-600: #2c3a52;
-  --color-line-500: #384861;
+  --color-ink-400: #968b6f; /* faintest typed meta on folder */
 
-  /* Accent — cyan/teal, informational use only */
-  --color-accent-300: #7dd8e8;
-  --color-accent-400: #3fb9cf;
-  --color-accent-500: #2299b4;
-  --color-accent-600: #1a7a92;
-  --color-accent-900: #0d2f3a;
-  --color-accent-950: #081f27;
+  /* Hairlines and borders */
+  --color-rule-400: #a99c78; /* hairline rules on paper */
+  --color-rule-500: #8f815d; /* firmer rules, form borders */
+  --color-rule-600: #6f6244; /* strongest paper borders */
 
-  /* States */
-  --color-ok-300: #7fd8a6;
-  --color-ok-400: #4eb87c;
-  --color-ok-900: #0e2f1e;
-  --color-ok-950: #081f14;
+  /* Verdict inks — reserved for verdicts, stamps, exhibit tags, charge sheets */
+  --color-stamp-300: #c9564d; /* light red wash */
+  --color-stamp-500: #a3271e; /* stamp red — tamper/fail/verdict */
+  --color-stamp-600: #7c1a13; /* deep red for small text on paper */
+  --color-stamp-50: #f6e4e0; /* red wash on paper */
+  --color-notary-300: #7fae7c; /* light green wash */
+  --color-notary-500: #2e6b3e; /* notary green — verified/authentic */
+  --color-notary-600: #235830; /* deep notary for small text */
+  --color-notary-50: #e4ecdb; /* green wash on paper */
 
-  --color-warn-300: #e8c47d;
-  --color-warn-400: #d9a441;
-  --color-warn-900: #33270e;
-  --color-warn-950: #201806;
+  /* Simulated/demo annotation — rubber-stamp amber, used sparingly */
+  --color-annotation-500: #8a5a16; /* brown-amber ink */
+  --color-annotation-50: #f0e4c8;
 
-  --color-bad-300: #f0a3a3;
-  --color-bad-400: #e06c6c;
-  --color-bad-500: #c94f4f;
-  --color-bad-900: #381414;
-  --color-bad-950: #250d0d;
+  /* Keyboard focus */
+  --color-focus-500: #1f5c8b; /* blue archival pen — focus rings only */
+
+  /* Kept for backwards-compat with a few utility classes */
+  --color-accent-300: #4a4436;
+  --color-accent-400: #5f5743;
+  --color-accent-500: #7a7057;
+  --color-accent-600: #6f6244;
+  --color-accent-950: #ede3c9;
+  --color-ink-100: #23201a;
+  --color-ink-200: #23201a;
+  --color-ink-300: #4a4436;
+  --color-ink-500: #7a7057;
+  --color-base-950: #e7dabc;
+  --color-base-900: #f5efdf;
+  --color-base-850: #ede3c9;
+  --color-base-800: #ede3c9;
+  --color-base-700: #e2d4b0;
+  --color-line-700: #a99c78;
+  --color-line-600: #8f815d;
+  --color-line-500: #6f6244;
+  --color-ok-300: #235830;
+  --color-ok-400: #2e6b3e;
+  --color-ok-200: #235830;
+  --color-ok-900: #e4ecdb;
+  --color-ok-950: #e4ecdb;
+  --color-warn-300: #8a5a16;
+  --color-warn-400: #8a5a16;
+  --color-warn-900: #f0e4c8;
+  --color-warn-950: #f0e4c8;
+  --color-bad-300: #7c1a13;
+  --color-bad-400: #a3271e;
+  --color-bad-500: #a3271e;
+  --color-bad-200: #7c1a13;
+  --color-bad-900: #f6e4e0;
+  --color-bad-950: #f6e4e0;
 }
 
 @layer base {
   html {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   body {
-    @apply bg-base-950 text-ink-100 antialiased;
-    font-family: var(--font-sans);
+    background-color: var(--color-folder-500);
+    background-image:
+      repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(111, 98, 68, 0.035) 3px, rgba(111, 98, 68, 0.035) 4px);
+    color: var(--color-ink-900);
+    font-family: var(--font-mono);
     font-size: 14px;
     -webkit-font-smoothing: antialiased;
   }
 
   ::selection {
-    background: var(--color-accent-600);
-    color: #fff;
+    background: var(--color-ink-900);
+    color: var(--color-paper-100);
   }
 
   h1, h2, h3, h4 {
-    @apply font-sans;
+    font-family: var(--font-serif);
     letter-spacing: -0.01em;
+  }
+
+  code, pre {
+    font-family: var(--font-mono);
+  }
+
+  /* Keyboard focus — visible everywhere, blue archival pen */
+  :focus-visible {
+    outline: 2px solid var(--color-focus-500);
+    outline-offset: 2px;
+    border-radius: 1px;
   }
 }
 
-/* ── Form controls: compact, console-like ─────────────────────────────────── */
+/* ── Form controls: typewriter fields on paper ─────────────────────────────── */
 .input,
 .select {
-  @apply w-full rounded-md border border-line-700 bg-base-950 px-2.5 py-1.5 text-xs text-ink-100;
-  @apply transition-colors placeholder:text-ink-500;
+  @apply w-full border bg-paper-100 px-2.5 py-1.5 text-xs text-ink-900;
+  border-color: var(--color-rule-500);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  transition: border-color 0.15s ease;
 }
 .input:hover,
 .select:hover {
-  border-color: var(--color-line-600);
+  border-color: var(--color-rule-600);
 }
 .input:focus,
 .select:focus {
-  outline: none;
-  border-color: var(--color-accent-500);
-  box-shadow: 0 0 0 1px var(--color-accent-600);
+  outline: 2px solid var(--color-focus-500);
+  outline-offset: 0;
+  border-color: var(--color-focus-500);
+}
+.input:disabled,
+.select:disabled {
+  opacity: 0.5;
 }
 .label {
-  @apply block font-mono text-[10px] uppercase tracking-wider text-ink-400;
+  @apply block text-[10px] uppercase text-ink-600;
+  letter-spacing: 0.08em;
   margin-bottom: 4px;
+  font-family: var(--font-mono);
 }
 .select {
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236e7d93' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235f5743' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 8px center;
   padding-right: 26px;
 }
 .select option {
-  background-color: var(--color-base-900);
-  color: var(--color-ink-100);
+  background-color: var(--color-paper-100);
+  color: var(--color-ink-900);
 }
 
 /* ── Scrollbars ────────────────────────────────────────────────────────────── */
@@ -115,36 +170,58 @@
   height: 8px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--color-paper-200);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: var(--color-line-700);
+  background: var(--color-rule-400);
   border-radius: 4px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--color-line-600);
+  background: var(--color-rule-500);
 }
 
-/* ── Motion: state transitions only, no decoration ────────────────────────── */
-@keyframes check-in {
-  from { opacity: 0; transform: translateY(-2px); }
-  to { opacity: 1; transform: translateY(0); }
+/* ═════════════════════════════════════════════════════════════════════════════
+   THE ONE MOTION MOMENT — the rubber stamp slam.
+   Scale-settle from 1.6 with a 1° rotation, ~320ms, like a stamp pressed hard.
+   Everything else in the app is still. Disabled under prefers-reduced-motion.
+   ═════════════════════════════════════════════════════════════════════════════ */
+@keyframes stamp-slam {
+  0% {
+    opacity: 0;
+    transform: scale(1.7) rotate(var(--stamp-rot, -4deg)) translateY(-6px);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(0.94) rotate(var(--stamp-rot, -4deg)) translateY(0);
+  }
+  75% {
+    transform: scale(1.03) rotate(var(--stamp-rot, -4deg));
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(var(--stamp-rot, -4deg));
+  }
 }
-.animate-check-in {
-  animation: check-in 0.22s ease-out both;
+.animate-stamp {
+  animation: stamp-slam 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
 }
 
+/* check rows appear instantly (no motion), keep for form-select flip only */
 @keyframes fade-up {
   from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 .animate-fade-up {
-  animation: fade-up 0.25s ease-out both;
+  animation: fade-up 0.2s ease-out both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .animate-check-in,
+  .animate-stamp,
   .animate-fade-up {
     animation: none;
+  }
+  .animate-stamp {
+    opacity: 1;
+    transform: rotate(var(--stamp-rot, -4deg));
   }
 }
