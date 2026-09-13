@@ -44,7 +44,8 @@ export interface HybridSignatures {
 
 export interface TEEAttestation {
   enabled: boolean;
-  enclaveProvider: 'Phala Network dstack';
+  mode: 'local-demo' | 'remote-enclave';
+  enclaveProvider: string;
   enclaveId: string;
   mrEnclave: string;
   mrSigner: string;

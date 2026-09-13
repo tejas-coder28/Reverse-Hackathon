@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Check, ChevronDown, Loader2, X } from 'lucide-react';
-import type { VerificationCheckResult } from '../../cool/types';
+import type { VerificationCheckResult } from '../../evidence/types';
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Verification UI primitives — check rows and overall verdict banner.
-   Presentation only; all results come from src/cool/verify.ts via the
+   Presentation only; all results come from src/evidence/verify.ts via the
    evidence service. No verification logic is re-implemented here.
    ═══════════════════════════════════════════════════════════════════════════ */
 

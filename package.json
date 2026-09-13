@@ -10,6 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@noble/ed25519": "^3.2.0",
+    "@noble/hashes": "^2.4.0",
+    "@noble/post-quantum": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.45.0",
     "react": "^19.2.8",

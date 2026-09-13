@@ -1,4 +1,4 @@
-import type { CooLReceipt } from '../../cool/types';
+import type { CooLReceipt } from '../../evidence/types';
 import { evidenceService } from '../../services/evidenceService';
 
 /*

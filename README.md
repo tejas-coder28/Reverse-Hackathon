@@ -34,10 +34,10 @@ Without cryptographic evidence at the AI decision boundary, post-hoc audits cann
 
 **Core Components:**
 - **Web UI Dashboard** (`src/components/`) — Interactive evidence explorer with tamper demonstration lab
-- **CooL SDK Integration** (`src/cool/`) — Cryptographic evidence generation & verification
+- **CooL Evidence Core** (`src/evidence/`) — Cryptographic evidence generation & verification
 - **AI Credit Model** (`src/model/creditModel.ts`) — Autonomous decision boundary producing credit decisions
 - **Evidence Service** (`src/services/evidenceService.ts`) — Persistent receipt storage and retrieval
-- **Verification Engine** (`src/cool/verify.ts`) — Offline 5-point cryptographic validation
+- **Verification Engine** (`src/evidence/verify.ts`) — Offline 5-point cryptographic validation
 
 ---
 
@@ -47,12 +47,13 @@ The CooL SDK is invoked **at the exact moment of AI decision**:
 
 ### **1. `cool.record()` — Cryptographic Evidence Generation**
 ```typescript
-// src/cool/adapter.ts
+// src/evidence/client.ts
 const receipt = await cool.record({
-  domain: 'nbfc.credit_scoring',
-  input: applicantData,
-  output: creditDecision,
-  modelId: 'CreditRisk-v3'
+  applicant: applicantData,
+  decision: 'APPROVED',
+  modelId: 'CreditRisk-v3',
+  modelVersion: '3.4.1-prod',
+  metadata: decisionMetadata,
 });
 ```
 Records:
@@ -63,50 +64,50 @@ Records:
 
 ### **2. `createSaltedCommitment()` — PII-Safe State Sealing**
 ```typescript
-// src/cool/hash.ts
-const commitment = createSaltedCommitment({
-  salt: randomSalt,
-  input: applicantInput,
-  output: decision
-});
-// Result: H(SALT : input || output)
+// src/evidence/hash.ts
+const commitment = await createSaltedCommitment(
+  applicantInput,   // ApplicantInput
+  'APPROVED',       // decision string
+  decisionMetadata, // DecisionMetadata
+);
+// Result: { salt, saltedInputHash, saltedOutputHash, combinedStateHash }
 // ✓ Proves what was decided without exposing PII
 ```
 
 ### **3. `createHybridSignatures()` — Dual-Strength Signatures**
 ```typescript
-// src/cool/sign.ts
-const signatures = createHybridSignatures(commitment);
-// Ed25519: Classical, widely-supported
-// ML-DSA-65: Post-quantum resistant (FIPS 204 compliant)
+// src/evidence/sign.ts
+const signatures = await createHybridSignatures(commitment.combinedStateHash);
+// Ed25519: Classical, widely-supported (via @noble/curves)
+// ML-DSA-65: Post-quantum resistant FIPS 204 (via @noble/post-quantum)
 ```
 
 ### **4. `createTEEAttestation()` — Hardware-Rooted Trust**
 ```typescript
-// src/cool/phala/dstack.ts
-const teeQuote = createTEEAttestation({
-  enclave: 'phala-dstack',
-  payload: commitment
-});
-// Proof that decision was made inside a tamper-proof enclave
+// src/evidence/phala/dstack.ts
+const teeQuote = await createTEEAttestation(
+  commitment.combinedStateHash,  // payload hash
+  true                            // enabled
+);
+// SHA-256 integrity binding to mrEnclave/mrSigner measurements
 ```
 
 ### **5. `appendToTransparencyLog()` — Append-Only Audit Trail**
 ```typescript
-// src/cool/phala/log.ts
-const merkleProof = appendToTransparencyLog(receipt);
+// src/evidence/phala/log.ts
+const merkleProof = await appendToTransparencyLog(commitment.combinedStateHash);
 // RFC 6962 Merkle tree inclusion proof
 // ✓ Auditable without any API access
 ```
 
 ### **6. `verifyReceipt()` — Offline Verification**
 ```typescript
-// src/cool/verify.ts
-const verification = verifyReceipt(receipt);
+// src/evidence/verify.ts
+const verification = await verifyReceipt(receipt);
 // Runs 5 independent fail-closed cryptographic checks:
 // ✓ Hash commitment integrity
-// ✓ Ed25519 signature validity
-// ✓ ML-DSA-65 post-quantum signature validity
+// ✓ Ed25519 signature validity (real @noble/curves verification)
+// ✓ ML-DSA-65 post-quantum signature validity (real @noble/post-quantum verification)
 // ✓ TEE quote authenticity
 // ✓ Merkle tree consistency
 ```
@@ -142,7 +143,7 @@ Reverse-Hackthon/
 ├── 📄 ARCHITECTURE.md                    # Detailed system architecture
 ├── 📄 DEMO.md                            # Demonstration guide
 ├── 📄 SECURITY.md                        # Security considerations
-├── 📄 LICENSE                            # MIT License
+├── 📄 LICENSE.md                         # MIT License
 ├── 📄 package.json                       # Node.js dependencies & scripts
 ├── 📄 package-lock.json                  # Dependency lock file
 ├── 📄 vite.config.ts                     # Vite build configuration
@@ -158,17 +159,23 @@ Reverse-Hackthon/
 ├── 📂 src/                               # Main application source code
 │   ├── 📄 main.tsx                       # Application entry point
 │   ├── 📄 App.tsx                        # Root React component (main dashboard)
+│   ├── 📄 App.css                        # App-level styles
 │   ├── 📄 index.css                      # Global styles
 │   │
 │   ├── 📂 components/                    # React UI components
-│   │   ├── 📄 EvidenceTab.tsx            # Evidence explorer UI
-│   │   ├── 📄 TamperLabTab.tsx           # Tamper demonstration interface
-│   │   ├── 📄 CreditDecisionCard.tsx     # Credit decision display component
-│   │   ├── 📄 VerificationPanel.tsx      # Receipt verification display
-│   │   └── 📄 [other UI components]
+│   │   ├── 📄 Header.tsx                 # App header with branding
+│   │   ├── 📄 OverviewTab.tsx            # System overview dashboard
+│   │   ├── 📄 SimulatorTab.tsx           # Credit decision simulator
+│   │   ├── 📄 EvidenceReceiptTab.tsx     # Evidence receipt inspector
+│   │   ├── 📄 AuditDashboardTab.tsx      # Audit ledger dashboard
+│   │   ├── 📄 TamperLabTab.tsx           # Interactive tamper demonstration
+│   │   ├── 📄 ReceiptInspectorModal.tsx  # Receipt detail modal
+│   │   ├── 📄 DisclaimerBanner.tsx       # Legal disclaimer banner
+│   │   └── 📂 ui/                        # Shared UI primitives
 │   │
-│   ├── 📂 cool/                          # CooL SDK cryptographic core
-│   │   ├── 📄 adapter.ts                 # CooL SDK invocation & adaptation layer
+│   ├── 📂 evidence/                      # CooL cryptographic evidence core
+│   │   ├── 📄 adapter.ts                 # CooL invocation & adaptation layer
+│   │   ├── 📄 client.ts                  # CooL client (record() entry point)
 │   │   ├── 📄 hash.ts                    # Salted SHA-256 commitment hashing
 │   │   ├── 📄 sign.ts                    # Ed25519 + ML-DSA-65 hybrid signatures
 │   │   ├── 📄 verify.ts                  # 5-point offline verification engine
@@ -179,67 +186,51 @@ Reverse-Hackthon/
 │   │       └── 📄 log.ts                 # RFC 6962 transparency log management
 │   │
 │   ├── 📂 model/                         # AI Credit Decision Model
-│   │   ├── 📄 creditModel.ts             # Autonomous credit risk scoring logic
-│   │   ├── 📄 types.ts                   # Input/output data types
-│   │   └── 📄 sampleData.ts              # Synthetic applicant data generator
+│   │   └── 📄 creditModel.ts             # Autonomous credit risk scoring logic
 │   │
 │   ├── 📂 services/                      # Application services
-│   │   ├── 📄 evidenceService.ts         # Receipt persistence & retrieval
-│   │   ├── 📄 auditService.ts            # Audit trail management
-│   │   └── 📄 storage.ts                 # Local storage abstraction
+│   │   └── 📄 evidenceService.ts         # Receipt persistence & retrieval
 │   │
 │   └── 📂 assets/                        # Static assets
-│       ├── 📄 logo.svg
-│       └── 📄 [other images]
 │
 ├── 📂 tests/                             # Test suite
-│   ├── 📄 cool.test.ts                   # CooL cryptographic tests
-│   ├── 📄 verify.test.ts                 # Verification engine tests
-│   ├── 📄 creditModel.test.ts            # AI model logic tests
-│   └── 📄 integration.test.ts            # End-to-end integration tests
+│   └── 📄 cool.test.ts                   # CooL cryptographic & integration tests (8 tests)
 │
 ├── 📂 docs/                              # Additional documentation
-│   ├── 📄 API.md                         # API documentation
-│   ├── 📄 CONTRIBUTING.md                # Contribution guidelines
-│   └── 📄 CRYPTOGRAPHY.md                # Detailed crypto explanations
 │
 └── 📂 public/                            # Public static files
-    └── 📄 [static assets]
 ```
 
 ### **Directory Descriptions**
 
-#### **`src/cool/` — Cryptographic Evidence Core**
-- **adapter.ts**: Main entry point for CooL SDK. Orchestrates the entire evidence generation flow.
-- **hash.ts**: Implements salted SHA-256 hashing to create PII-safe commitments.
-- **sign.ts**: Generates dual Ed25519 + ML-DSA-65 signatures for evidence sealing.
-- **verify.ts**: Implements the 5-point cryptographic verification checklist.
+#### **`src/evidence/` — Cryptographic Evidence Core**
+- **adapter.ts**: CooL service adapter. Orchestrates the entire evidence generation flow with fail-closed error handling.
+- **client.ts**: `CooLClient` class with `record()` entry point that composes hash → sign → TEE → log pipeline.
+- **hash.ts**: Salted SHA-256 hashing via `@noble/hashes` to create PII-safe commitments.
+- **sign.ts**: Real Ed25519 (`@noble/curves`) + ML-DSA-65 (`@noble/post-quantum`) hybrid signatures.
+- **verify.ts**: 5-point offline verification engine (hash, Ed25519, ML-DSA-65, TEE, Merkle).
 - **types.ts**: TypeScript interfaces for cryptographic primitives and receipts.
-- **phala/dstack.ts**: Integrates with Phala Network for TEE attestations.
-- **phala/log.ts**: Manages RFC 6962 transparency log entries and Merkle proofs.
+- **phala/dstack.ts**: TEE attestation with SHA-256 integrity binding to mrEnclave/mrSigner measurements.
+- **phala/log.ts**: RFC 6962 Merkle transparency log with append, inclusion proof generation, and verification.
 
 #### **`src/components/` — User Interface**
-- **EvidenceTab.tsx**: Interactive explorer for viewing and searching cryptographic receipts.
-- **TamperLabTab.tsx**: Demonstration lab showing how tampering is detected.
-- **CreditDecisionCard.tsx**: Displays AI credit decisions in a readable format.
-- **VerificationPanel.tsx**: Shows real-time verification results (pass/fail for each of 5 checks).
-- Other components for dashboard layout, navigation, and forms.
+- **Header.tsx**: Application header with branding.
+- **OverviewTab.tsx**: System overview with cryptographic infrastructure status.
+- **SimulatorTab.tsx**: Interactive credit decision simulator.
+- **EvidenceReceiptTab.tsx**: Receipt inspector showing all cryptographic fields.
+- **AuditDashboardTab.tsx**: Institutional audit ledger.
+- **TamperLabTab.tsx**: Interactive tamper demonstration (modify receipts, see verification fail).
+- **ReceiptInspectorModal.tsx**: Detailed receipt modal.
+- **DisclaimerBanner.tsx**: Legal disclaimer banner.
 
 #### **`src/model/` — AI Decision Model**
-- **creditModel.ts**: Autonomous neural network or decision tree for credit risk scoring.
-- **types.ts**: TypeScript definitions for applicant data and credit decisions.
-- **sampleData.ts**: Generates synthetic test applicants for demo purposes.
+- **creditModel.ts**: Deterministic credit risk scoring logic with 3 preset synthetic applicants.
 
-#### **`src/services/` — Backend Logic**
-- **evidenceService.ts**: Persists cryptographic receipts to browser local storage or backend DB.
-- **auditService.ts**: Manages audit trails and querying historical decisions.
-- **storage.ts**: Abstraction layer for storage (local, indexed DB, API, etc.).
+#### **`src/services/` — Application Services**
+- **evidenceService.ts**: Persists cryptographic receipts to browser localStorage with CooL adapter integration.
 
 #### **`tests/` — Test Suite**
-- **cool.test.ts**: Unit tests for hashing, signing, verification, and evidence generation.
-- **verify.test.ts**: Tests for the 5-point verification engine (happy path + tampering scenarios).
-- **creditModel.test.ts**: Tests for AI model logic and edge cases.
-- **integration.test.ts**: End-to-end tests of the full workflow from decision to audit.
+- **cool.test.ts**: 8 integration tests covering recording, persistence, verification, tampering, fail-closed handling, and PII safety.
 
 ---
 
@@ -371,7 +362,7 @@ VITE_PHALA_CONTRACT_ADDRESS=0x...
            ▼
 ┌─────────────────────────────────────────┐
 │     CooL SDK at Decision Boundary       │
-│         (src/cool/adapter.ts)           │
+│       (src/evidence/adapter.ts)         │
 └──────────┬──────────────────────────────┘
            │
     ┌──────┴──────────────────┬──────────────────┬──────────────┐
@@ -407,7 +398,7 @@ VITE_PHALA_CONTRACT_ADDRESS=0x...
 graph TD
     A[Synthetic Applicant #8842] -->|Submit| B[AI Credit Model<br/>CreditRisk-v3]
     B -->|Decision| C{Consequential<br/>Decision?}
-    C -->|Yes| D[CooL Service Adapter<br/>src/cool/adapter.ts]
+    C -->|Yes| D[CooL Service Adapter<br/>src/evidence/adapter.ts]
     D -->|cool.record| E[CooL Core SDK]
     E --> F["Salted SHA-256<br/>PII Commitment<br/>H(SALT : input || output)"]
     E --> G[Ed25519 +<br/>ML-DSA-65<br/>Hybrid Signatures]
@@ -416,7 +407,7 @@ graph TD
     F & G & H & I --> J[Cryptographic Evidence<br/>Receipt JSON]
     J --> K[Evidence Service<br/>src/services/evidenceService.ts]
     K --> L[Storage & Ledger]
-    J --> M[Offline Verifier<br/>src/cool/verify.ts]
+    J --> M[Offline Verifier<br/>src/evidence/verify.ts]
     M -->|5-Point Check| N{Evidence<br/>Valid?}
     N -->|✓ Yes| O[Audit Lab<br/>Non-Repudiation Proof]
     N -->|✗ No| P[Tamper Lab<br/>Tampering Detected]
@@ -429,14 +420,15 @@ graph TD
 | Component | File | Purpose |
 |-----------|------|---------|
 | **AI Decision Generation** | `src/model/creditModel.ts` | Autonomous credit risk scoring |
-| **CooL Record Invocation** | `src/cool/adapter.ts` | Evidence capture at decision boundary |
-| **Salted Commitment** | `src/cool/hash.ts` | PII-safe state hashing |
-| **Cryptographic Signing** | `src/cool/sign.ts` | Ed25519 + ML-DSA-65 dual signatures |
-| **TEE Attestation** | `src/cool/phala/dstack.ts` | Hardware-rooted trust proof |
-| **Transparency Log** | `src/cool/phala/log.ts` | RFC 6962 Merkle tree management |
+| **CooL Record Invocation** | `src/evidence/adapter.ts` | Evidence capture at decision boundary |
+| **CooL Client** | `src/evidence/client.ts` | `record()` entry point composing evidence pipeline |
+| **Salted Commitment** | `src/evidence/hash.ts` | PII-safe state hashing via `@noble/hashes` |
+| **Cryptographic Signing** | `src/evidence/sign.ts` | Real Ed25519 + ML-DSA-65 dual signatures |
+| **TEE Attestation** | `src/evidence/phala/dstack.ts` | SHA-256 integrity binding to enclave measurements |
+| **Transparency Log** | `src/evidence/phala/log.ts` | RFC 6962 Merkle tree management |
 | **Evidence Storage** | `src/services/evidenceService.ts` | Receipt persistence & retrieval |
-| **Offline Verification** | `src/cool/verify.ts` | 5-point cryptographic validation |
-| **Evidence Dashboard** | `src/components/EvidenceTab.tsx` | Receipt inspection UI |
+| **Offline Verification** | `src/evidence/verify.ts` | 5-point cryptographic validation |
+| **Evidence Dashboard** | `src/components/EvidenceReceiptTab.tsx` | Receipt inspection UI |
 | **Tamper Laboratory** | `src/components/TamperLabTab.tsx` | Interactive tampering demonstrations |
 
 ---
@@ -555,10 +547,10 @@ All 5 checks must pass for evidence to be deemed authentic. Any failure returns 
 
 ### **Current Limitations**
 
-#### **Browser TEE Simulation**
+#### **Browser TEE (Local Demo Mode)**
 - **Limitation:** Browser environment cannot execute true SGX/TDX enclave code.
-- **Current:** Phala dstack quotes are simulated via client-side specification.
-- **Impact:** TEE attestation is cryptographically signed but not hardware-isolated in development.
+- **Current:** Phala dstack quotes run in local-demo mode with real SHA-256 integrity binding to mrEnclave/mrSigner measurements.
+- **Impact:** Crypto operations are real; hardware isolation requires a remote-enclave deployment.
 - **Future:** Deploy backend TEE enclave on actual Phala Network for production audit.
 
 #### **PII Commitment Reversibility**

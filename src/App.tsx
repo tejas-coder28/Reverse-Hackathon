@@ -8,7 +8,7 @@ import { EvidenceReceiptTab } from './components/EvidenceReceiptTab';
 import { AuditDashboardTab } from './components/AuditDashboardTab';
 import { TamperLabTab } from './components/TamperLabTab';
 import { ReceiptInspectorModal } from './components/ReceiptInspectorModal';
-import type { CooLReceipt } from './cool/types';
+import type { CooLReceipt } from './evidence/types';
 import { evidenceService } from './services/evidenceService';
 import { seedDemoOnce } from './components/ui/demoSeed';
 

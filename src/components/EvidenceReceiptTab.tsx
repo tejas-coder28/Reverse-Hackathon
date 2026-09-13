@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { ScanSearch, Lock } from 'lucide-react';
-import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
+import type { CooLReceipt, VerificationCheckResult } from '../evidence/types';
 import { evidenceService } from '../services/evidenceService';
 import {
   Button,
@@ -169,7 +169,7 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
               </div>
               <div className="mt-3">
                 <StatusBadge tone={receipt.teeAttestation.enabled ? 'ok' : 'neutral'}>
-                  {receipt.teeAttestation.enabled ? 'Simulated · valid' : 'Not requested'}
+                  {receipt.teeAttestation.enabled ? 'Local demo · valid' : 'Not requested'}
                 </StatusBadge>
               </div>
             </Panel>

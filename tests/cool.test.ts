@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { cool } from '../src/cool/client';
-import { verifyReceipt } from '../src/cool/verify';
-import { coolAdapter } from '../src/cool/adapter';
+import { cool } from '../src/evidence/client';
+import { verifyReceipt } from '../src/evidence/verify';
+import { coolAdapter } from '../src/evidence/adapter';
 import { evidenceService } from '../src/services/evidenceService';
 import { PRESET_APPLICANTS, runCreditModel } from '../src/model/creditModel';
 

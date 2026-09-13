@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileDiff, RotateCcw, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
-import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
+import type { CooLReceipt, VerificationCheckResult } from '../evidence/types';
 import { evidenceService } from '../services/evidenceService';
 import { seedDemoOnce } from './ui/demoSeed';
 import { Button, Panel, StatusBadge, SectionHeader } from './ui/primitives';

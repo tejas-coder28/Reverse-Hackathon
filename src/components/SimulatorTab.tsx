@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { Play, Loader2, CircleCheck, ShieldAlert, FileJson2 } from 'lucide-react';
-import type { ApplicantInput, CooLReceipt } from '../cool/types';
+import type { ApplicantInput, CooLReceipt } from '../evidence/types';
 import { PRESET_APPLICANTS, runCreditModel } from '../model/creditModel';
 import { evidenceService } from '../services/evidenceService';
-import type { CooLRecordResult } from '../cool/adapter';
+import type { CooLRecordResult } from '../evidence/adapter';
 import { Button, Panel, StatusBadge, Field, KeyValueGrid, CopyableValue, SectionHeader, EmptyState } from './ui/primitives';
 import { decisionTone, shortHash } from './ui/format';
 

@@ -9,6 +9,7 @@ export async function createTEEAttestation(combinedStateHash: string, enabled = 
   if (!enabled) {
     return {
       enabled: false,
+      mode: 'local-demo',
       enclaveProvider: 'Phala Network dstack',
       enclaveId: 'NONE',
       mrEnclave: 'NONE',
@@ -23,6 +24,7 @@ export async function createTEEAttestation(combinedStateHash: string, enabled = 
 
   return {
     enabled: true,
+    mode: 'local-demo',
     enclaveProvider: 'Phala Network dstack',
     enclaveId: 'dstack-sgx-node-asia-south1',
     mrEnclave: DSTACK_MRENCLAVE_MEASUREMENT,
@@ -44,7 +46,7 @@ export async function verifyTEEAttestation(
   const expectedSig = `dstack_quote_${await sha256Hex(`TEE_QUOTE_SIG:${quoteData}`)}`;
 
   if (attestation.quoteSignature !== expectedSig) {
-    return { valid: false, reason: 'TEE dstack hardware quote signature mismatch or altered payload.' };
+    return { valid: false, reason: 'TEE dstack quote signature mismatch or altered payload.' };
   }
 
   return { valid: true };

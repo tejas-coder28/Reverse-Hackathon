@@ -11,10 +11,10 @@
  * or claims of post-hoc decision manipulation.
  */
 
-import type { ApplicantInput, CooLReceipt, VerificationCheckResult } from '../cool/types';
-import { coolAdapter, type CooLRecordResult } from '../cool/adapter';
+import type { ApplicantInput, CooLReceipt, VerificationCheckResult } from '../evidence/types';
+import { coolAdapter, type CooLRecordResult } from '../evidence/adapter';
 import { PRESET_APPLICANTS, runCreditModel, type CreditEvaluationResult } from '../model/creditModel';
-import { resetTransparencyLog } from '../cool/phala/log';
+import { resetTransparencyLog } from '../evidence/phala/log';
 
 const STORAGE_KEY = 'cool_evidence_ledger_v1';
 

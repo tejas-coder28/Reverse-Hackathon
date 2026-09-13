@@ -1,32 +1,18 @@
+import { sha256 } from '@noble/hashes/sha2.js';
+import { bytesToHex } from '@noble/hashes/utils.js';
 import type { ApplicantInput, DecisionMetadata, SaltedCommitment } from './types';
 
 export async function sha256Hex(str: string): Promise<string> {
-  if (typeof crypto !== 'undefined' && crypto.subtle) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(str);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-  } else {
-    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
-    for (let i = 0; i < str.length; i++) {
-      const ch = str.charCodeAt(i);
-      h1 = Math.imul(h1 ^ ch, 2654435761);
-      h2 = Math.imul(h2 ^ ch, 1597334677);
-    }
-    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-    const hex1 = (h1 >>> 0).toString(16).padStart(8, '0');
-    const hex2 = (h2 >>> 0).toString(16).padStart(8, '0');
-    return (hex1 + hex2 + hex1 + hex2).substring(0, 64);
-  }
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  return bytesToHex(sha256(data));
 }
 
 export function generateSalt(): string {
   if (typeof crypto !== 'undefined' && crypto.getRandomValues) {
     const bytes = new Uint8Array(16);
     crypto.getRandomValues(bytes);
-    return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
+    return bytesToHex(bytes);
   }
   return Math.random().toString(36).substring(2) + Date.now().toString(36);
 }

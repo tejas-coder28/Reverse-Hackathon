@@ -3,7 +3,7 @@ import { ArrowRight, PlayCircle, ScanSearch, FlaskConical } from 'lucide-react';
 import type { TabType } from './Header';
 import { Button, Panel, StatusBadge, Field, KeyValueGrid, CopyableValue, EmptyState } from './ui/primitives';
 import { DataTable, type DataTableColumn } from './ui/DataTable';
-import type { CooLReceipt } from '../cool/types';
+import type { CooLReceipt } from '../evidence/types';
 import { evidenceService } from '../services/evidenceService';
 import { decisionTone, formatClock, shortHash } from './ui/format';
 
@@ -162,14 +162,14 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ onStartDemo, setActive
                 {item.state === 'operational' ? (
                   <StatusBadge tone="ok">Operational</StatusBadge>
                 ) : (
-                  <StatusBadge tone="accent">Demo / Simulated</StatusBadge>
+                  <StatusBadge tone="accent">Local Demo</StatusBadge>
                 )}
               </li>
             ))}
           </ul>
           <p className="mt-3 border-t border-line-700/60 pt-3 text-[11px] leading-relaxed text-ink-400">
             Evidence capture, offline verification, and the transparency log run fully in this session. TEE
-            attestation quotes follow the Phala dstack client specification and are simulated in the browser.
+            attestation quotes follow the Phala dstack client specification and run in local-demo mode in the browser.
           </p>
         </Panel>
       </div>

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { X, Copy, Check } from 'lucide-react';
-import type { CooLReceipt } from '../cool/types';
+import type { CooLReceipt } from '../evidence/types';
 import { Button, StatusBadge } from './ui/primitives';
 import { decisionTone } from './ui/format';
 

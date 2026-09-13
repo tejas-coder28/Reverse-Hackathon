@@ -12,7 +12,7 @@
  * alteration or repudiation of AI decision logic.
  */
 
-import type { ApplicantInput, DecisionMetadata, DecisionResult } from '../cool/types';
+import type { ApplicantInput, DecisionMetadata, DecisionResult } from '../evidence/types';
 
 export interface CreditEvaluationResult {
   decision: DecisionResult;

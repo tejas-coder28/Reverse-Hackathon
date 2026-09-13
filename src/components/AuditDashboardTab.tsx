@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { RefreshCw, Download, Search } from 'lucide-react';
-import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
+import type { CooLReceipt, VerificationCheckResult } from '../evidence/types';
 import { evidenceService } from '../services/evidenceService';
 import { Button, Panel, StatusBadge, SectionHeader } from './ui/primitives';
 import { DataTable, type DataTableColumn } from './ui/DataTable';
