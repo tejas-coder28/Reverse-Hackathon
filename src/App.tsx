@@ -41,7 +41,7 @@ export function App() {
   };
 
   return (
-    <div className="flex min-h-screen flex-col bg-base-950 text-ink-100">
+    <div className="flex min-h-screen flex-col bg-folder-500 text-ink-900">
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -87,12 +87,12 @@ export function App() {
         onClose={() => setInspectingReceipt(null)}
       />
 
-      <footer className="border-t border-line-700 bg-base-950">
+      <footer className="border-t-2 border-rule-600 bg-folder-600">
         <div className="mx-auto flex max-w-[1400px] flex-col items-start justify-between gap-2 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
-          <p className="font-mono text-[11px] text-ink-400">
-            CooL.ledger — AI Decision Evidence &amp; Audit Platform · Demo environment
+          <p className="text-[11px] text-ink-700">
+            CooL.ledger · Evidence Room for AI Decisions · Demo environment
           </p>
-          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-500">
+          <p className="text-[10px] uppercase tracking-[0.08em] text-ink-500">
             SHA-256 · Ed25519 · ML-DSA-65 (FIPS 204) · Phala dstack TEE · RFC 6962
           </p>
         </div>
