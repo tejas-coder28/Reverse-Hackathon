@@ -31,13 +31,17 @@ export const TamperLabTab: React.FC = () => {
       const simulatedInput = activeTamperMode === 'INCOME_ALTERED'
         ? {
             applicantId: editedReceipt.applicantId,
+            name: editedReceipt.applicantId,
             annualIncome: simulatedIncome,
             existingDebt: 12000,
             creditScore: 785,
             loanAmountRequested: 35000,
+            collateralValue: 85000,
+            employmentYears: 6.5,
           }
         : undefined;
 
+      // Execute actual CooL verification protocol
       const res = await evidenceService.verifyOffline(editedReceipt, simulatedInput);
       setVerificationResult(res);
       setIsVerifying(false);
@@ -90,6 +94,9 @@ export const TamperLabTab: React.FC = () => {
     <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
+          <div className="text-xs font-mono font-bold tracking-wider text-rose-400 uppercase mb-1">
+            FLOW 3 — TAMPER & CRYPTOGRAPHIC VERIFICATION
+          </div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
             <AlertOctagon className="h-6 w-6 text-rose-400" />
             <span>Interactive Tamper & Cryptographic Verification Lab</span>
@@ -108,10 +115,11 @@ export const TamperLabTab: React.FC = () => {
         </button>
       </div>
 
+      {/* Attack Scenario Selectors */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-5 space-y-3">
         <div className="flex items-center space-x-2 text-xs font-semibold text-slate-300">
           <Edit3 className="h-4 w-4 text-amber-400" />
-          <span>Select Attack / Tamper Scenario to Test Offline Verifier:</span>
+          <span>Select Attack / Tamper Scenario to Test Offline Verifier Engine:</span>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
@@ -166,6 +174,7 @@ export const TamperLabTab: React.FC = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Left Column: Editable Receipt Payload */}
         <div className="lg:col-span-6 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="font-semibold text-white flex items-center gap-2 text-sm">
@@ -178,7 +187,7 @@ export const TamperLabTab: React.FC = () => {
               </span>
             ) : (
               <span className="font-mono text-xs text-emerald-400 bg-emerald-950 px-2 py-0.5 rounded border border-emerald-800">
-                AUTHENTIC SEEDED RECEIPT
+                AUTHENTIC ORIGINAL RECEIPT
               </span>
             )}
           </div>
@@ -283,7 +292,9 @@ export const TamperLabTab: React.FC = () => {
           </button>
         </div>
 
+        {/* Right Column: Verification Results & FLOW 3 Badges */}
         <div className="lg:col-span-6 space-y-6">
+          {/* FLOW 3 REQUIREMENT: Show ORIGINAL ✓ VERIFIED vs TAMPERED ✗ VERIFICATION FAILED */}
           <div className={`rounded-2xl border p-6 space-y-4 shadow-2xl ${
             verificationResult.isUnforged
               ? 'border-emerald-500/40 bg-emerald-950/20'
@@ -297,11 +308,13 @@ export const TamperLabTab: React.FC = () => {
                   <AlertOctagon className="h-10 w-10 text-rose-400 shrink-0" />
                 )}
                 <div>
-                  <div className="text-xs uppercase font-mono tracking-wider text-slate-400">Offline Verifier Verdict</div>
+                  <div className="text-xs uppercase font-mono tracking-wider text-slate-400">
+                    {activeTamperMode === 'NONE' ? 'ORIGINAL RECEIPT VERDICT' : 'TAMPERED RECEIPT VERDICT'}
+                  </div>
                   <div className={`text-2xl font-black font-mono tracking-tight ${
                     verificationResult.isUnforged ? 'text-emerald-400' : 'text-rose-400'
                   }`}>
-                    {verificationResult.isUnforged ? 'VERDICT: UNFORGED' : 'VERDICT: TAMPER DETECTED'}
+                    {verificationResult.isUnforged ? 'ORIGINAL: ✓ VERIFIED' : 'TAMPERED: ✗ VERIFICATION FAILED'}
                   </div>
                 </div>
               </div>
@@ -349,11 +362,12 @@ export const TamperLabTab: React.FC = () => {
             </div>
           </div>
 
+          {/* Verification Trace Errors */}
           {verificationResult.tamperErrors.length > 0 && (
             <div className="rounded-2xl border border-rose-500/40 bg-slate-950 p-5 space-y-3">
               <div className="flex items-center space-x-2 text-rose-400 font-mono text-xs font-bold">
                 <AlertTriangle className="h-4 w-4" />
-                <span>Verification Error Trace:</span>
+                <span>Real Verification Failure Origin Trace:</span>
               </div>
               <ul className="space-y-2 font-mono text-xs text-rose-300/90 leading-relaxed">
                 {verificationResult.tamperErrors.map((err, idx) => (

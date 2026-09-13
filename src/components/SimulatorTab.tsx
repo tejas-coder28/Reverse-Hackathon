@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Cpu, ShieldCheck, UserCheck, Play, FileText, CheckCircle2, AlertCircle, XCircle, Code, Lock, Key, Database } from 'lucide-react';
+import { Cpu, ShieldCheck, UserCheck, Play, FileText, CheckCircle2, AlertCircle, XCircle, Code, Lock, Key, Database, ShieldAlert } from 'lucide-react';
 import type { ApplicantInput, CooLReceipt } from '../cool/types';
 import { PRESET_APPLICANTS, runCreditModel } from '../model/creditModel';
 import { evidenceService } from '../services/evidenceService';
+import type { CooLRecordResult } from '../cool/adapter';
 
 interface SimulatorTabProps {
   onReceiptCreated: (receipt: CooLReceipt) => void;
@@ -15,25 +16,32 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({ onReceiptCreated, on
   const [isEvaluating, setIsEvaluating] = useState(false);
   const [currentReceipt, setCurrentReceipt] = useState<CooLReceipt | null>(null);
   const [evaluationResult, setEvaluationResult] = useState<ReturnType<typeof runCreditModel> | null>(null);
+  const [recordResult, setRecordResult] = useState<CooLRecordResult | null>(null);
 
   const handleSelectPreset = (app: ApplicantInput) => {
     setSelectedApplicant(app);
     setCustomApplicant({ ...app });
     setCurrentReceipt(null);
     setEvaluationResult(null);
+    setRecordResult(null);
   };
 
   const handleRunEvaluation = async () => {
     setIsEvaluating(true);
     setCurrentReceipt(null);
+    setRecordResult(null);
 
     setTimeout(async () => {
-      const { decisionResult, receipt } = await evidenceService.evaluateAndRecord(customApplicant);
+      const { decisionResult, recordResult: res, receipt } = await evidenceService.evaluateAndRecord(customApplicant);
       setEvaluationResult(decisionResult);
-      setCurrentReceipt(receipt);
+      setRecordResult(res);
+
+      if (res.success && receipt) {
+        setCurrentReceipt(receipt);
+        onReceiptCreated(receipt);
+      }
       setIsEvaluating(false);
-      onReceiptCreated(receipt);
-    }, 600);
+    }, 500);
   };
 
   return (
@@ -68,6 +76,7 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({ onReceiptCreated, on
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        {/* Synthetic Input Form */}
         <div className="lg:col-span-5 space-y-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
           <div className="flex items-center justify-between border-b border-slate-800 pb-3">
             <h3 className="font-semibold text-white flex items-center gap-2 text-sm">
@@ -166,7 +175,7 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({ onReceiptCreated, on
             {isEvaluating ? (
               <>
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                <span>Running CreditRisk-v3 & CooL Recording...</span>
+                <span>Executing AI Decision & CooL Recording...</span>
               </>
             ) : (
               <>
@@ -177,9 +186,11 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({ onReceiptCreated, on
           </button>
         </div>
 
+        {/* Results Panel */}
         <div className="lg:col-span-7 space-y-6">
-          {evaluationResult && currentReceipt ? (
+          {evaluationResult && recordResult ? (
             <div className="space-y-6">
+              {/* Decision Outcome Card */}
               <div className={`rounded-2xl border p-6 space-y-4 shadow-xl ${
                 evaluationResult.decision === 'APPROVED'
                   ? 'border-emerald-500/40 bg-emerald-950/20'
@@ -216,69 +227,109 @@ export const SimulatorTab: React.FC<SimulatorTabProps> = ({ onReceiptCreated, on
                 </p>
               </div>
 
-              <div className="rounded-2xl border border-cyan-500/30 bg-slate-900/80 p-6 space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-                  <div className="flex items-center space-x-2">
-                    <ShieldCheck className="h-5 w-5 text-cyan-400" />
-                    <h4 className="font-bold text-white text-sm">CooL Cryptographic Receipt Generated</h4>
+              {/* FLOW 1 — EVIDENCE STATUS BANNER */}
+              {recordResult.success && currentReceipt ? (
+                <div className="rounded-2xl border border-cyan-500/40 bg-slate-900/90 p-6 space-y-4 shadow-2xl">
+                  <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                    <div>
+                      <div className="text-xs font-mono font-bold tracking-wider text-cyan-400 uppercase">
+                        FLOW 1 — CREATE EVIDENCE
+                      </div>
+                      <h4 className="font-bold text-white text-base flex items-center gap-2">
+                        <ShieldCheck className="h-5 w-5 text-emerald-400" />
+                        <span>DECISION RECORDED</span>
+                      </h4>
+                    </div>
+                    <span className="font-mono text-xs text-cyan-300 bg-cyan-950 px-3 py-1 rounded border border-cyan-800/60">
+                      {currentReceipt.decisionId}
+                    </span>
                   </div>
-                  <span className="font-mono text-xs text-cyan-400 bg-cyan-950 px-2 py-1 rounded border border-cyan-800/60">
-                    {currentReceipt.decisionId}
-                  </span>
+
+                  {/* Flow 1 Required Checkmarks */}
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 font-mono text-xs">
+                    <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>Evidence created</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>Cryptographic protection active</span>
+                    </div>
+                    <div className="p-2.5 rounded-lg bg-emerald-950/60 border border-emerald-800/60 text-emerald-300 flex items-center gap-2">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />
+                      <span>Receipt generated</span>
+                    </div>
+                  </div>
+
+                  {/* Cryptographic Technical Details */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-2">
+                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
+                        <Lock className="h-3.5 w-3.5 text-cyan-400" />
+                        <span>Salted PII Commitment</span>
+                      </div>
+                      <div className="font-mono text-[11px] text-cyan-300 truncate">
+                        {currentReceipt.privacyCommitment.combinedStateHash}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
+                        <Key className="h-3.5 w-3.5 text-cyan-400" />
+                        <span>Hybrid Cryptography</span>
+                      </div>
+                      <div className="font-mono text-[11px] text-slate-300">
+                        Ed25519 + ML-DSA-65 (FIPS 204)
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
+                        <Database className="h-3.5 w-3.5 text-cyan-400" />
+                        <span>RFC 6962 Merkle Root</span>
+                      </div>
+                      <div className="font-mono text-[11px] text-cyan-300 truncate">
+                        {currentReceipt.transparencyLog.merkleRoot}
+                      </div>
+                    </div>
+
+                    <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
+                      <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
+                        <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
+                        <span>TEE dstack Attestation</span>
+                      </div>
+                      <div className="font-mono text-[11px] text-emerald-400">
+                        {currentReceipt.teeAttestation.enclaveId}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      onClick={() => onInspectReceipt(currentReceipt)}
+                      className="flex items-center space-x-2 rounded-xl bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-semibold text-cyan-300 transition-all border border-cyan-800/40"
+                    >
+                      <Code className="h-4 w-4" />
+                      <span>Inspect Raw Cryptographic Receipt JSON</span>
+                    </button>
+                  </div>
                 </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
-                      <Lock className="h-3.5 w-3.5 text-cyan-400" />
-                      <span>Salted PII Commitment</span>
-                    </div>
-                    <div className="font-mono text-[11px] text-cyan-300 truncate">
-                      {currentReceipt.privacyCommitment.combinedStateHash}
-                    </div>
+              ) : (
+                /* FAIL-CLOSED SECURITY WARNING BANNER */
+                <div className="rounded-2xl border border-rose-500/60 bg-rose-950/30 p-6 space-y-3 shadow-2xl">
+                  <div className="flex items-center space-x-3 text-rose-400 font-mono text-sm font-bold">
+                    <ShieldAlert className="h-6 w-6 shrink-0" />
+                    <span>Decision completed — evidence protection failed</span>
                   </div>
-
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
-                      <Key className="h-3.5 w-3.5 text-cyan-400" />
-                      <span>Hybrid Cryptography</span>
-                    </div>
-                    <div className="font-mono text-[11px] text-slate-300">
-                      Ed25519 + ML-DSA-65 (FIPS 204)
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
-                      <Database className="h-3.5 w-3.5 text-cyan-400" />
-                      <span>RFC 6962 Merkle Root</span>
-                    </div>
-                    <div className="font-mono text-[11px] text-cyan-300 truncate">
-                      {currentReceipt.transparencyLog.merkleRoot}
-                    </div>
-                  </div>
-
-                  <div className="p-3 rounded-lg bg-slate-950 border border-slate-800 space-y-1">
-                    <div className="flex items-center space-x-1.5 text-slate-400 font-mono">
-                      <ShieldCheck className="h-3.5 w-3.5 text-emerald-400" />
-                      <span>TEE dstack Attestation</span>
-                    </div>
-                    <div className="font-mono text-[11px] text-emerald-400">
-                      {currentReceipt.teeAttestation.enclaveId}
-                    </div>
+                  <p className="text-xs text-rose-200/90 leading-relaxed font-mono">
+                    SECURITY WARNING: CooL evidence recording encountered an error during decision execution.
+                    Under our fail-closed security principle, this decision is NOT marked as cryptographically protected or verified.
+                  </p>
+                  <div className="text-[11px] font-mono text-rose-400 bg-slate-950 p-2.5 rounded border border-rose-900/60">
+                    Error Detail: {recordResult.error || 'Crypto commitment generation failed'}
                   </div>
                 </div>
-
-                <div className="flex justify-end pt-2">
-                  <button
-                    onClick={() => onInspectReceipt(currentReceipt)}
-                    className="flex items-center space-x-2 rounded-xl bg-slate-800 hover:bg-slate-700 px-4 py-2 text-xs font-semibold text-cyan-300 transition-all border border-cyan-800/40"
-                  >
-                    <Code className="h-4 w-4" />
-                    <span>Inspect Raw Cryptographic Receipt JSON</span>
-                  </button>
-                </div>
-              </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-800 bg-slate-900/30 p-12 text-center space-y-3">

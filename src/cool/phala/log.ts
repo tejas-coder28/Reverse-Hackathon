@@ -1,7 +1,11 @@
 import type { TransparencyLogProof } from '../types';
 import { sha256Hex } from '../hash';
 
-const transparencyLogStore: string[] = [];
+let transparencyLogStore: string[] = [];
+
+export function resetTransparencyLog(): void {
+  transparencyLogStore = [];
+}
 
 export async function appendToTransparencyLog(combinedStateHash: string): Promise<TransparencyLogProof> {
   const leafHash = await sha256Hex(`00${combinedStateHash}`);
@@ -84,6 +88,13 @@ export async function verifyTransparencyLog(
     };
   }
 
+  if (proof.treeSize === 1 && proof.inclusionProof.length === 0) {
+    if (proof.merkleRoot !== expectedLeaf) {
+      return { valid: false, reason: 'Merkle root mismatch for single-node tree.' };
+    }
+    return { valid: true };
+  }
+
   let currentHash = expectedLeaf;
   let idx = proof.leafIndex;
 
@@ -96,11 +107,7 @@ export async function verifyTransparencyLog(
     idx = Math.floor(idx / 2);
   }
 
-  if (proof.inclusionProof.length === 0 && proof.merkleRoot !== expectedLeaf) {
-    return { valid: false, reason: 'Merkle root mismatch for single-node tree.' };
-  }
-
-  if (proof.inclusionProof.length > 0 && currentHash !== proof.merkleRoot) {
+  if (currentHash !== proof.merkleRoot) {
     return {
       valid: false,
       reason: `Merkle tree root mismatch. Recalculated (${currentHash.substring(0, 12)}...) != Claimed (${proof.merkleRoot.substring(0, 12)}...)`,

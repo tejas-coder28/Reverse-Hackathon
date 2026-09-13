@@ -1,11 +1,24 @@
-import { cool } from '../cool/client';
-import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
-import { verifyReceipt } from '../cool/verify';
-import { PRESET_APPLICANTS, runCreditModel } from '../model/creditModel';
+/**
+ * Institutional AI Decision Evidence Storage & Management Service
+ * 
+ * WHY CooL IS INTEGRATED HERE:
+ * This service sits directly at the application's consequential decision boundary.
+ * When the credit underwriting model (`runCreditModel`) completes execution, this service
+ * immediately passes the applicant payload and model evaluation output into `coolAdapter.recordDecisionEvidence()`.
+ * 
+ * Evidence is committed at decision time so the institution can later demonstrate non-repudiation
+ * of what was evaluated and decided, protecting the organization against retroactive log tampering
+ * or claims of post-hoc decision manipulation.
+ */
+
+import type { ApplicantInput, CooLReceipt, VerificationCheckResult } from '../cool/types';
+import { coolAdapter, type CooLRecordResult } from '../cool/adapter';
+import { PRESET_APPLICANTS, runCreditModel, type CreditEvaluationResult } from '../model/creditModel';
+import { resetTransparencyLog } from '../cool/phala/log';
 
 const STORAGE_KEY = 'cool_evidence_ledger_v1';
 
-class EvidenceService {
+export class EvidenceService {
   private receipts: CooLReceipt[] = [];
 
   constructor() {
@@ -14,9 +27,11 @@ class EvidenceService {
 
   private loadFromStorage() {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        this.receipts = JSON.parse(stored);
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          this.receipts = JSON.parse(stored);
+        }
       }
     } catch {
       this.receipts = [];
@@ -25,12 +40,17 @@ class EvidenceService {
 
   private saveToStorage() {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(this.receipts));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.receipts));
+      }
     } catch {
       // Memory fallback
     }
   }
 
+  /**
+   * Seeds demo receipts using real CooL SDK cryptographic recording if empty.
+   */
   async seedDemoIfEmpty(): Promise<CooLReceipt> {
     if (this.receipts.length > 0) {
       return this.receipts[0];
@@ -39,82 +59,84 @@ class EvidenceService {
     const applicant8842 = PRESET_APPLICANTS[0];
     const modelResult = runCreditModel(applicant8842);
     
-    const receipt = await cool.record({
-      applicant: applicant8842,
-      decision: modelResult.decision,
-      modelId: modelResult.modelId,
-      modelVersion: modelResult.modelVersion,
-      metadata: modelResult.metadata,
-      enableTEE: true,
-    });
+    // Consequential Decision Boundary: Commit evidence at decision time via CooL Adapter
+    const recordRes = await coolAdapter.recordDecisionEvidence(applicant8842, modelResult, true);
+    if (!recordRes.success || !recordRes.receipt) {
+      throw new Error(`Failed to seed demo receipt for ${applicant8842.applicantId}: ${recordRes.error}`);
+    }
 
-    this.receipts.unshift(receipt);
-    this.saveToStorage();
+    this.receipts.unshift(recordRes.receipt);
 
-    const app8843 = PRESET_APPLICANTS[1];
-    const res8843 = runCreditModel(app8843);
-    const receipt8843 = await cool.record({
-      applicant: app8843,
-      decision: res8843.decision,
-      modelId: res8843.modelId,
-      modelVersion: res8843.modelVersion,
-      metadata: res8843.metadata,
-      enableTEE: true,
-    });
-    this.receipts.push(receipt8843);
-
-    const app8844 = PRESET_APPLICANTS[2];
-    const res8844 = runCreditModel(app8844);
-    const receipt8844 = await cool.record({
-      applicant: app8844,
-      decision: res8844.decision,
-      modelId: res8844.modelId,
-      modelVersion: res8844.modelVersion,
-      metadata: res8844.metadata,
-      enableTEE: true,
-    });
-    this.receipts.push(receipt8844);
+    // Seed remaining preset applicants for rich audit ledger
+    for (let i = 1; i < PRESET_APPLICANTS.length; i++) {
+      const app = PRESET_APPLICANTS[i];
+      const res = runCreditModel(app);
+      const rec = await coolAdapter.recordDecisionEvidence(app, res, true);
+      if (rec.success && rec.receipt) {
+        this.receipts.push(rec.receipt);
+      }
+    }
 
     this.saveToStorage();
-    return receipt;
+    return recordRes.receipt;
   }
 
-  async evaluateAndRecord(applicantInput: typeof PRESET_APPLICANTS[0]): Promise<{
-    decisionResult: ReturnType<typeof runCreditModel>;
-    receipt: CooLReceipt;
+  /**
+   * Evaluates synthetic applicant and records CooL evidence at the consequential decision boundary.
+   */
+  async evaluateAndRecord(applicantInput: ApplicantInput): Promise<{
+    decisionResult: CreditEvaluationResult;
+    recordResult: CooLRecordResult;
+    receipt?: CooLReceipt;
   }> {
+    // 1. AI DECISION: Execute model
     const decisionResult = runCreditModel(applicantInput);
-    
-    const receipt = await cool.record({
-      applicant: applicantInput,
-      decision: decisionResult.decision,
-      modelId: decisionResult.modelId,
-      modelVersion: decisionResult.modelVersion,
-      metadata: decisionResult.metadata,
-      enableTEE: true,
-    });
 
-    this.receipts.unshift(receipt);
-    this.saveToStorage();
+    // 2. COOL RECORDING: Call adapter at the exact moment decision occurs
+    const recordResult = await coolAdapter.recordDecisionEvidence(applicantInput, decisionResult, true);
 
-    return { decisionResult, receipt };
+    // 3. PERSISTENCE & CRYPTOGRAPHIC PROTECTION: If successful, persist clean evidence record
+    if (recordResult.success && recordResult.receipt) {
+      this.receipts.unshift(recordResult.receipt);
+      this.saveToStorage();
+      return { decisionResult, recordResult, receipt: recordResult.receipt };
+    }
+
+    // FAIL-CLOSED SECURITY PRINCIPLE:
+    // If evidence creation fails, return failure status. Do NOT persist unverified or fake receipts.
+    return { decisionResult, recordResult };
   }
 
+  /**
+   * Retrieves all persisted cryptographic evidence receipts.
+   */
   getAllReceipts(): CooLReceipt[] {
     return [...this.receipts];
   }
 
+  /**
+   * Looks up receipt by unique decision ID.
+   */
   getReceiptById(id: string): CooLReceipt | undefined {
     return this.receipts.find(r => r.decisionId === id);
   }
 
-  async verifyOffline(receipt: CooLReceipt, applicantInput?: any): Promise<VerificationCheckResult> {
-    return await verifyReceipt(receipt, applicantInput);
+  /**
+   * Runs offline CooL verification via adapter boundary.
+   */
+  async verifyOffline(receipt: CooLReceipt, applicantInput?: ApplicantInput): Promise<VerificationCheckResult> {
+    return await coolAdapter.verifyDecisionEvidence(receipt, applicantInput);
   }
 
+  /**
+   * Clears ledger storage and resets Merkle transparency log store.
+   */
   clearLedger() {
     this.receipts = [];
-    localStorage.removeItem(STORAGE_KEY);
+    resetTransparencyLog();
+    if (typeof localStorage !== 'undefined') {
+      localStorage.removeItem(STORAGE_KEY);
+    }
   }
 }
 

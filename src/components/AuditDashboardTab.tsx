@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Search, Filter, Download, Code, CheckCircle2, AlertOctagon, RefreshCw } from 'lucide-react';
+import { Database, Search, Filter, Download, Code, CheckCircle2, AlertOctagon, RefreshCw, Check, X } from 'lucide-react';
 import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
 import { evidenceService } from '../services/evidenceService';
 
@@ -67,12 +67,15 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
     <div className="space-y-8 pb-12">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
+          <div className="text-xs font-mono font-bold tracking-wider text-cyan-400 uppercase mb-1">
+            FLOW 2 — AUDIT
+          </div>
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
             <Database className="h-6 w-6 text-cyan-400" />
             <span>Institutional AI Decision Audit Ledger</span>
           </h2>
           <p className="text-xs text-slate-400">
-            Immutable RFC 6962 Transparency Log & Verification Records ({receipts.length} Decisions Logged)
+            Immutable RFC 6962 Transparency Log & Offline Verification Ledger ({receipts.length} Decisions Logged)
           </p>
         </div>
 
@@ -131,8 +134,8 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
                 <th className="px-4 py-3.5">Decision ID & Applicant</th>
                 <th className="px-4 py-3.5">AI Decision</th>
                 <th className="px-4 py-3.5">Salted PII Commitment</th>
-                <th className="px-4 py-3.5">Merkle Leaf Index</th>
-                <th className="px-4 py-3.5">Verification Status</th>
+                <th className="px-4 py-3.5">Individual Verification Checks</th>
+                <th className="px-4 py-3.5">Overall Status</th>
                 <th className="px-4 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -161,18 +164,42 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
                         </span>
                       </td>
 
-                      <td className="px-4 py-4 max-w-[200px]">
+                      <td className="px-4 py-4 max-w-[180px]">
                         <div className="text-[11px] text-cyan-300 truncate">
                           {r.privacyCommitment.combinedStateHash}
                         </div>
                         <div className="text-[10px] text-slate-500">Salt: {r.privacyCommitment.salt.substring(0, 10)}...</div>
                       </td>
 
-                      <td className="px-4 py-4">
-                        <span className="text-slate-300">Leaf #{r.transparencyLog.leafIndex}</span>
-                        <div className="text-[10px] text-slate-500">Tree Size: {r.transparencyLog.treeSize}</div>
+                      {/* Individual Verification Checks Breakdown */}
+                      <td className="px-4 py-4 space-y-1 text-[10px]">
+                        {verification ? (
+                          <>
+                            <div className="flex items-center space-x-1">
+                              {verification.signatureValid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-rose-400" />}
+                              <span className={verification.signatureValid ? 'text-slate-300' : 'text-rose-400 font-bold'}>
+                                Hybrid Sigs (Ed25519/ML-DSA-65)
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {verification.transparencyLogValid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-rose-400" />}
+                              <span className={verification.transparencyLogValid ? 'text-slate-300' : 'text-rose-400 font-bold'}>
+                                Merkle Log (RFC 6962)
+                              </span>
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              {verification.teeAttestationValid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-rose-400" />}
+                              <span className={verification.teeAttestationValid ? 'text-slate-300' : 'text-rose-400 font-bold'}>
+                                TEE dstack Quote
+                              </span>
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-slate-500">Evaluating checks...</span>
+                        )}
                       </td>
 
+                      {/* Overall Status */}
                       <td className="px-4 py-4">
                         {isVerifying ? (
                           <div className="flex items-center space-x-1.5 text-cyan-400">

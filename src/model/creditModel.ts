@@ -1,3 +1,17 @@
+/**
+ * Autonomous AI Credit Evaluation Engine
+ * 
+ * CORE EVIDENCE PIPELINE STAGE: AI DECISION GENERATION
+ * 
+ * WHY CooL IS USED HERE:
+ * This is the consequential decision boundary. The credit model evaluates synthetic applicant
+ * parameters (income, debt, credit score, loan amount) and outputs a binding underwriting result.
+ * 
+ * Evidence is committed immediately following this decision step so the application can later
+ * demonstrate exactly what was evaluated and decided at decision time, preventing any post-hoc
+ * alteration or repudiation of AI decision logic.
+ */
+
 import type { ApplicantInput, DecisionMetadata, DecisionResult } from '../cool/types';
 
 export interface CreditEvaluationResult {
