@@ -17,6 +17,8 @@ export interface CheckItem {
   explanation: string;
   metadata: string;
   detail?: string;
+  tag?: string;
+  isSimulated?: boolean;
 }
 
 function CheckIcon({ status }: { status: CheckStatus }) {
@@ -73,6 +75,17 @@ export function VerificationCheckRow({ item }: { item: CheckItem }) {
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <span className={`text-[13px] font-medium ${nameColor}`}>{item.name}</span>
+            {item.tag && (
+              <span
+                className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider ${
+                  item.isSimulated
+                    ? 'border border-amber-600/40 bg-amber-950/50 text-amber-300'
+                    : 'border border-ok-800/60 bg-ok-950/60 text-ok-300'
+                }`}
+              >
+                {item.tag}
+              </span>
+            )}
             <span
               className={`font-mono text-[10px] font-semibold uppercase tracking-wider ${
                 item.status === 'pass'
@@ -164,6 +177,8 @@ export function checksFromResult(
     items.push({
       id: 'commitment',
       name: 'Commitment integrity',
+      tag: 'REAL SHA-256',
+      isSimulated: false,
       status: result.hashCommitmentValid ? 'pass' : 'fail',
       explanation: 'Sealed SHA-256 state commitment matches the recorded decision output.',
       metadata: result.details.hashCommitmentDetail,
@@ -175,6 +190,8 @@ export function checksFromResult(
     {
       id: 'signature',
       name: 'Ed25519 signature',
+      tag: 'REAL CRYPTO',
+      isSimulated: false,
       status: result.signatureValid ? 'pass' : 'fail',
       explanation: 'Classical signature over the state commitment validates against the institutional public key.',
       metadata: result.details.signatureDetail,
@@ -183,6 +200,8 @@ export function checksFromResult(
     {
       id: 'pqs',
       name: 'ML-DSA-65 signature',
+      tag: 'REAL POST-QUANTUM',
+      isSimulated: false,
       status: result.signatureValid ? 'pass' : 'fail',
       explanation: 'Post-quantum signature (FIPS 204) guards the same commitment against future quantum adversaries.',
       metadata: result.details.signatureDetail,
@@ -191,14 +210,18 @@ export function checksFromResult(
     {
       id: 'tee',
       name: 'TEE attestation',
+      tag: 'SIMULATED / DEMO',
+      isSimulated: true,
       status: result.teeAttestationValid ? 'pass' : 'fail',
-      explanation: 'Phala dstack enclave quote is bound to the commitment and is not self-editable.',
+      explanation: 'Phala dstack enclave quote is bound to the commitment (local-demo mode in browser).',
       metadata: result.details.teeAttestationDetail,
-      detail: 'Validates the dstack quote signature over mrEnclave : mrSigner : state hash : timestamp.',
+      detail: 'Validates the dstack quote signature over mrEnclave : mrSigner : state hash : timestamp in client-side local-demo mode.',
     },
     {
       id: 'merkle',
       name: 'Merkle inclusion proof',
+      tag: 'REAL MERKLE LOG',
+      isSimulated: false,
       status: result.transparencyLogValid ? 'pass' : 'fail',
       explanation: 'RFC 6962 append-only log proof recalculates to the recorded tree root.',
       metadata: result.details.transparencyLogDetail,

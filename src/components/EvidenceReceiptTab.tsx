@@ -159,6 +159,12 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
 
           <div className="grid gap-4 sm:grid-cols-2">
             <Panel title="Attestation" meta="Phala dstack">
+              <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-line-700/60 pb-2">
+                <span className="rounded border border-amber-600/40 bg-amber-950/40 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-amber-300">
+                  SIMULATED / LOCAL DEMO
+                </span>
+                <span className="text-[10px] text-ink-400">Browser mock of TEE quote</span>
+              </div>
               <KeyValueGrid className="grid-cols-1">
                 <Field label="Provider">{receipt.teeAttestation.enclaveProvider}</Field>
                 <Field label="Enclave">{receipt.teeAttestation.enclaveId}</Field>
@@ -168,8 +174,8 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
                 <CopyableValue label="Quote signature" value={receipt.teeAttestation.quoteSignature} />
               </div>
               <div className="mt-3">
-                <StatusBadge tone={receipt.teeAttestation.enabled ? 'ok' : 'neutral'}>
-                  {receipt.teeAttestation.enabled ? 'Local demo · valid' : 'Not requested'}
+                <StatusBadge tone={receipt.teeAttestation.enabled ? 'accent' : 'neutral'}>
+                  {receipt.teeAttestation.enabled ? 'Local demo · valid quote binding' : 'Not requested'}
                 </StatusBadge>
               </div>
             </Panel>
