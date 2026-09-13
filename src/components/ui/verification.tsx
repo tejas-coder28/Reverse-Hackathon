@@ -1,12 +1,14 @@
 import { useState } from 'react';
-import { Check, ChevronDown, Loader2, X } from 'lucide-react';
+import { Check, ChevronDown, X } from 'lucide-react';
 import type { VerificationCheckResult } from '../../evidence/types';
+import { Stamp } from './primitives';
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Verification UI primitives — check rows and overall verdict banner.
+   Verification UI primitives — lab-report check rows and the verdict stamp.
    Presentation only; all results come from src/evidence/verify.ts via the
    evidence service. No verification logic is re-implemented here.
-   ═══════════════════════════════════════════════════════════════════════════ */
+   The stamp slam is the app's single orchestrated motion moment.
+   ═════════════════════════════════════════════════ checkboxes are inked squares */
 
 export type CheckStatus = 'pass' | 'fail' | 'pending' | 'inactive';
 
@@ -24,31 +26,58 @@ export interface CheckItem {
 function CheckIcon({ status }: { status: CheckStatus }) {
   if (status === 'pass') {
     return (
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-ok-900 bg-ok-950">
-        <Check className="h-3.5 w-3.5 text-ok-400" strokeWidth={2.5} />
+      <span
+        className="flex h-5 w-5 shrink-0 items-center justify-center border border-notary-500 bg-notary-50"
+        style={{ borderRadius: 2 }}
+      >
+        <Check className="h-3.5 w-3.5 text-notary-600" strokeWidth={3} />
       </span>
     );
   }
   if (status === 'fail') {
     return (
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-bad-900 bg-bad-950">
-        <X className="h-3.5 w-3.5 text-bad-400" strokeWidth={2.5} />
+      <span
+        className="flex h-5 w-5 shrink-0 items-center justify-center border border-stamp-500 bg-stamp-50"
+        style={{ borderRadius: 2 }}
+      >
+        <X className="h-3.5 w-3.5 text-stamp-600" strokeWidth={3} />
       </span>
     );
   }
   if (status === 'inactive') {
     return (
-      <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-line-700 bg-base-850 font-mono text-[10px] text-ink-500">
-        —
+      <span
+        className="flex h-5 w-5 shrink-0 items-center justify-center border border-rule-400 bg-paper-200 text-[10px] text-ink-500"
+        style={{ borderRadius: 2 }}
+      >
+        n/a
       </span>
     );
   }
   return (
-    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-sm border border-line-700 bg-base-850">
-      <Loader2 className="h-3 w-3 animate-spin text-accent-400" />
+    <span
+      className="flex h-5 w-5 shrink-0 items-center justify-center border border-rule-500 bg-paper-100 font-bold text-ink-600"
+      style={{ borderRadius: 2 }}
+      aria-hidden="true"
+    >
+      …
     </span>
   );
 }
+
+const STATUS_LABEL: Record<CheckStatus, string> = {
+  pass: 'Match',
+  fail: 'Mismatch',
+  inactive: 'Not examined',
+  pending: 'Checking',
+};
+
+const STATUS_COLOR: Record<CheckStatus, string> = {
+  pass: 'text-notary-600',
+  fail: 'text-stamp-600',
+  inactive: 'text-ink-500',
+  pending: 'text-ink-700',
+};
 
 export function VerificationCheckRow({ item }: { item: CheckItem }) {
   const [open, setOpen] = useState(false);
@@ -56,66 +85,51 @@ export function VerificationCheckRow({ item }: { item: CheckItem }) {
 
   const nameColor =
     item.status === 'pass'
-      ? 'text-ink-100'
+      ? 'text-ink-900'
       : item.status === 'fail'
-        ? 'text-bad-300'
+        ? 'text-stamp-600'
         : item.status === 'inactive'
-          ? 'text-ink-400'
-          : 'text-ink-300';
+          ? 'text-ink-500'
+          : 'text-ink-700';
 
   return (
-    <li className="animate-check-in border-b border-line-700/60 last:border-b-0">
+    <li className="border-b border-rule-400 last:border-b-0">
       <button
         type="button"
         onClick={() => canExpand && setOpen((v) => !v)}
-        className={`flex w-full items-start gap-3 px-4 py-3 text-left ${canExpand ? 'cursor-pointer hover:bg-base-850' : 'cursor-default'}`}
+        className={`flex w-full items-start gap-3 px-4 py-3 text-left ${canExpand ? 'cursor-pointer hover:bg-paper-200/60' : 'cursor-default'}`}
         disabled={!canExpand}
       >
         <CheckIcon status={item.status} />
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-            <span className={`text-[13px] font-medium ${nameColor}`}>{item.name}</span>
+            <span className={`text-[13px] font-bold ${nameColor}`}>{item.name}</span>
             {item.tag && (
               <span
-                className={`rounded px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider ${
+                className={`border px-1.5 py-0.5 text-[9px] font-bold uppercase ${
                   item.isSimulated
-                    ? 'border border-amber-600/40 bg-amber-950/50 text-amber-300'
-                    : 'border border-ok-800/60 bg-ok-950/60 text-ok-300'
+                    ? 'border-annotation-500 bg-annotation-50 text-annotation-500'
+                    : 'border-rule-500 bg-paper-200 text-ink-600'
                 }`}
+                style={{ borderRadius: 2 }}
               >
                 {item.tag}
               </span>
             )}
-            <span
-              className={`font-mono text-[10px] font-semibold uppercase tracking-wider ${
-                item.status === 'pass'
-                  ? 'text-ok-400'
-                  : item.status === 'fail'
-                    ? 'text-bad-400'
-                    : item.status === 'inactive'
-                      ? 'text-ink-500'
-                      : 'text-accent-400'
-              }`}
-            >
-              {item.status === 'pass'
-                ? 'PASS'
-                : item.status === 'fail'
-                  ? 'FAIL'
-                  : item.status === 'inactive'
-                    ? 'NOT APPLICABLE'
-                    : 'CHECKING…'}
+            <span className={`text-[10px] font-bold uppercase ${STATUS_COLOR[item.status]}`}>
+              {STATUS_LABEL[item.status]}
             </span>
             {canExpand && (
               <ChevronDown
-                className={`ml-auto h-3.5 w-3.5 shrink-0 text-ink-400 transition-transform ${open ? 'rotate-180' : ''}`}
+                className={`ml-auto h-3.5 w-3.5 shrink-0 text-ink-500 transition-transform ${open ? 'rotate-180' : ''}`}
               />
             )}
           </div>
-          <p className="mt-0.5 text-xs leading-relaxed text-ink-300">{item.explanation}</p>
-          <p className="mt-0.5 truncate font-mono text-[10px] text-ink-500">{item.metadata}</p>
+          <p className="mt-0.5 text-xs leading-relaxed text-ink-600">{item.explanation}</p>
+          <p className="mt-0.5 truncate text-[10px] text-ink-500">{item.metadata}</p>
           {canExpand && open && (
-            <div className="mt-2 rounded border border-line-700 bg-base-950 p-2.5">
-              <p className="whitespace-pre-wrap break-words font-mono text-[11px] leading-relaxed text-ink-200">
+            <div className="mt-2 border border-rule-400 bg-paper-50 p-2.5" style={{ borderRadius: 2 }}>
+              <p className="whitespace-pre-wrap break-words text-[11px] leading-relaxed text-ink-700">
                 {item.detail}
               </p>
             </div>
@@ -128,7 +142,7 @@ export function VerificationCheckRow({ item }: { item: CheckItem }) {
 
 export function VerificationCheckList({ items }: { items: CheckItem[] }) {
   return (
-    <ul className="divide-y divide-line-700/60">
+    <ul className="divide-y divide-rule-400">
       {items.map((item) => (
         <VerificationCheckRow key={item.id} item={item} />
       ))}
@@ -136,8 +150,8 @@ export function VerificationCheckList({ items }: { items: CheckItem[] }) {
   );
 }
 
-/* ── Overall verdict banner ────────────────────────────────────────────────── */
-export function VerdictBanner({
+/* ── VerdictStamp — the lab report's conclusion, pressed in ink ────────────── */
+export function VerdictStamp({
   verdict,
   receiptId,
   note,
@@ -146,20 +160,31 @@ export function VerdictBanner({
   receiptId?: string;
   note?: string;
 }) {
-  const styles =
-    verdict === 'authentic'
-      ? 'border-ok-400/40 bg-ok-950/60 text-ok-300'
-      : verdict === 'tampered'
-        ? 'border-bad-400/50 bg-bad-950/70 text-bad-300'
-        : 'border-line-700 bg-base-850 text-ink-300';
-  const headline =
-    verdict === 'authentic' ? 'EVIDENCE AUTHENTIC' : verdict === 'tampered' ? 'EVIDENCE TAMPERED' : 'PENDING VERIFICATION';
+  if (verdict === 'pending') {
+    return (
+      <div
+        className="flex flex-wrap items-center gap-x-4 gap-y-1 border border-rule-500 bg-paper-200 px-4 py-3"
+        style={{ borderRadius: 2 }}
+      >
+        <span className="text-[11px] font-bold uppercase text-ink-700">Under examination</span>
+        {note && <span className="text-xs text-ink-600">{note}</span>}
+      </div>
+    );
+  }
 
+  const authentic = verdict === 'authentic';
   return (
-    <div className={`flex flex-wrap items-center gap-x-4 gap-y-1 rounded-md border px-4 py-3 ${styles}`}>
-      <span className="font-mono text-base font-semibold tracking-wide">{headline}</span>
-      {receiptId && <span className="font-mono text-xs opacity-70">{receiptId}</span>}
-      {note && <span className="text-xs opacity-80">{note}</span>}
+    <div className="flex flex-col items-start gap-2 border border-rule-400 bg-paper-50 px-4 py-5" style={{ borderRadius: 2 }}>
+      <Stamp tone={authentic ? 'green' : 'red'} size="md" angle={authentic ? -4 : -6} animate>
+        {authentic ? 'Unforged' : 'Evidence tampered'}
+      </Stamp>
+      <p className="text-xs leading-relaxed text-ink-700">
+        {authentic
+          ? 'The laboratory recomputed every check offline and the evidence matches its sealed state.'
+          : 'The laboratory recomputed every check offline and the evidence no longer matches its sealed state. This receipt cannot be trusted.'}
+      </p>
+      {receiptId && <p className="text-[10px] uppercase tracking-[0.08em] text-ink-500">Exhibit ref {receiptId}</p>}
+      {note && <p className="text-[11px] text-ink-500">{note}</p>}
     </div>
   );
 }
@@ -176,11 +201,11 @@ export function checksFromResult(
   if (includeCommitment) {
     items.push({
       id: 'commitment',
-      name: 'Commitment integrity',
+      name: 'Sealed state matches the decision',
       tag: 'REAL SHA-256',
       isSimulated: false,
       status: result.hashCommitmentValid ? 'pass' : 'fail',
-      explanation: 'Sealed SHA-256 state commitment matches the recorded decision output.',
+      explanation: 'The SHA-256 fingerprint of the recorded inputs and outputs reproduces exactly.',
       metadata: result.details.hashCommitmentDetail,
       detail: 'Recomputes H(SALT : input || output) and compares it to the stored combined state hash. Any change to the decision outcome or metadata breaks this equality.',
     });
@@ -189,41 +214,41 @@ export function checksFromResult(
   items.push(
     {
       id: 'signature',
-      name: 'Ed25519 signature',
+      name: 'Institution signature checks out',
       tag: 'REAL CRYPTO',
       isSimulated: false,
       status: result.signatureValid ? 'pass' : 'fail',
-      explanation: 'Classical signature over the state commitment validates against the institutional public key.',
+      explanation: 'The classical Ed25519 signature on this receipt was produced by the institution\u2019s key, not forged after the fact.',
       metadata: result.details.signatureDetail,
       detail: 'Recomputes the expected Ed25519 signature binding for the recorded public key and compares it byte-for-byte with the stored signature string.',
     },
     {
       id: 'pqs',
-      name: 'ML-DSA-65 signature',
+      name: 'Quantum-era signature checks out',
       tag: 'REAL POST-QUANTUM',
       isSimulated: false,
       status: result.signatureValid ? 'pass' : 'fail',
-      explanation: 'Post-quantum signature (FIPS 204) guards the same commitment against future quantum adversaries.',
+      explanation: 'The ML-DSA-65 (FIPS 204) signature holds, so the receipt survives future quantum attackers.',
       metadata: result.details.signatureDetail,
       detail: 'Recomputes the expected ML-DSA-65 (Dilithium, FIPS 204) signature binding and compares it with the stored value.',
     },
     {
       id: 'tee',
-      name: 'TEE attestation',
+      name: 'Enclave witness statement',
       tag: 'SIMULATED / DEMO',
       isSimulated: true,
       status: result.teeAttestationValid ? 'pass' : 'fail',
-      explanation: 'Phala dstack enclave quote is bound to the commitment (local-demo mode in browser).',
+      explanation: 'A simulated secure-enclave quote confirms the decision ran inside the attested code (browser demo of the Phala dstack flow).',
       metadata: result.details.teeAttestationDetail,
       detail: 'Validates the dstack quote signature over mrEnclave : mrSigner : state hash : timestamp in client-side local-demo mode.',
     },
     {
       id: 'merkle',
-      name: 'Merkle inclusion proof',
+      name: 'Entry exists in the public log',
       tag: 'REAL MERKLE LOG',
       isSimulated: false,
       status: result.transparencyLogValid ? 'pass' : 'fail',
-      explanation: 'RFC 6962 append-only log proof recalculates to the recorded tree root.',
+      explanation: 'The receipt\u2019s entry traces up the RFC 6962 append-only tree to the published root — it cannot have been silently removed.',
       metadata: result.details.transparencyLogDetail,
       detail: 'Replays the inclusion proof from the leaf hash up to the Merkle root and compares the result with the recorded root.',
     }
@@ -232,7 +257,7 @@ export function checksFromResult(
   if (includeDisclaimer) {
     items.push({
       id: 'scope',
-      name: 'Model correctness & fairness',
+      name: 'Was the decision itself correct or fair?',
       status: 'inactive',
       explanation: 'Outside the scope of this ledger — integrity is proven, decision quality is not claimed.',
       metadata: result.details.disclaimer,

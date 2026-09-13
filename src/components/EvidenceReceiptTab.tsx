@@ -11,8 +11,9 @@ import {
   CopyableValue,
   SectionHeader,
   EmptyState,
+  Stamp,
 } from './ui/primitives';
-import { VerificationCheckList, VerdictBanner, checksFromResult } from './ui/verification';
+import { VerificationCheckList, VerdictStamp, checksFromResult } from './ui/verification';
 import { decisionTone, formatDateTime } from './ui/format';
 
 interface EvidenceReceiptTabProps {
@@ -28,7 +29,7 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
     return (
       <EmptyState
         title="No active evidence receipt"
-        description="Run a decision in the Decision Console to generate a CooL cryptographic evidence receipt."
+        description="Run a decision in the Decision Console to open the next case file."
       />
     );
   }
@@ -45,23 +46,30 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
   return (
     <div className="space-y-6 pb-12">
       <SectionHeader
-        eyebrow="Evidence Receipt"
+        eyebrow="Exhibit A · Evidence Receipt"
         title={`Receipt ${receipt.decisionId}`}
         description="Cryptographic evidence captured at the decision boundary. Hashes and identifiers below are the sealed evidence values — copy them for independent offline verification."
         actions={
-          <div className="flex gap-2">
+          <div className="flex items-center gap-3">
+            <Stamp
+              size="sm"
+              angle={-3}
+              tone={verificationResult ? (verificationResult.isUnforged ? 'green' : 'red') : 'gray'}
+            >
+              {verificationResult ? (verificationResult.isUnforged ? 'Unforged' : 'Tampered') : 'Unverified'}
+            </Stamp>
             <Button variant="secondary" onClick={() => onInspectRaw(receipt)}>
               <ScanSearch className="h-4 w-4" />
               Raw JSON
             </Button>
             <Button variant="primary" onClick={handleRunVerification} disabled={isVerifying}>
-              {isVerifying ? 'Verifying…' : 'Verify Evidence'}
+              {isVerifying ? 'Examining…' : 'Verify Evidence'}
             </Button>
           </div>
         }
       />
 
-      {/* ── Receipt header fields ─────────────────────────────────────────── */}
+      {/* ── Receipt document fields ───────────────────────────────────────── */}
       <Panel title="Receipt" meta={`captured ${formatDateTime(receipt.timestamp)}`}>
         <KeyValueGrid className="grid-cols-2 lg:grid-cols-6">
           <Field label="Receipt ID" className="col-span-2">
@@ -78,45 +86,45 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
                 {verificationResult.isUnforged ? 'Verified' : 'Tampered'}
               </StatusBadge>
             ) : (
-              <span className="font-mono text-[11px] text-ink-500">Run verification</span>
+              <span className="text-[11px] uppercase text-ink-500">Run verification</span>
             )}
           </Field>
-          <Field label="Applicant">{receipt.applicantId}</Field>
-          <Field label="Domain">{receipt.domain}</Field>
-          <Field label="Timestamp (UTC)" className="col-span-2">
+          <Field label="Applicant ref">{receipt.applicantId}</Field>
+          <Field label="Decision domain">{receipt.domain}</Field>
+          <Field label="Sealed at (UTC)" className="col-span-2">
             {formatDateTime(receipt.timestamp)}
           </Field>
-          <Field label="Receipt spec">{`v${receipt.version}`}</Field>
-          <Field label="Log">{receipt.transparencyLog.logId}</Field>
+          <Field label="Receipt format">{`v${receipt.version}`}</Field>
+          <Field label="Public log">{receipt.transparencyLog.logId}</Field>
         </KeyValueGrid>
       </Panel>
 
       <div className="grid gap-4 xl:grid-cols-12">
-        {/* ── Cryptographic evidence column ──────────────────────────────── */}
+        {/* ── The exhibit body — cryptographic evidence ──────────────────── */}
         <div className="space-y-4 xl:col-span-7">
-          <Panel title="Commitment" meta="salted SHA-256">
+          <Panel title="Sealed state" meta="what the model saw and ruled, fingerprinted">
             <div className="space-y-3">
-              <div className="rounded-md border border-line-700 bg-base-950 p-3">
+              <div className="border border-rule-400 bg-paper-50 p-3" style={{ borderRadius: 2 }}>
                 <CopyableValue
-                  label="Combined state hash — H(SALT : input || output)"
+                  label="Complete decision fingerprint (SHA-256)"
                   value={receipt.privacyCommitment.combinedStateHash}
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-md border border-line-700 bg-base-950 p-3">
+                <div className="border border-rule-400 bg-paper-50 p-3" style={{ borderRadius: 2 }}>
                   <CopyableValue
-                    label="Salted input commitment"
+                    label="Inputs fingerprint (salted)"
                     value={receipt.privacyCommitment.saltedInputHash}
                   />
                 </div>
-                <div className="rounded-md border border-line-700 bg-base-950 p-3">
+                <div className="border border-rule-400 bg-paper-50 p-3" style={{ borderRadius: 2 }}>
                   <CopyableValue
-                    label="Salted output commitment"
+                    label="Outputs fingerprint (salted)"
                     value={receipt.privacyCommitment.saltedOutputHash}
                   />
                 </div>
               </div>
-              <p className="text-[11px] leading-relaxed text-ink-400">
+              <p className="text-[11px] leading-relaxed text-ink-600">
                 Raw applicant PII is never written into evidence. Inputs and outputs are sealed behind a per-receipt
                 random salt; the salt is retained for offline recomputation by the institution.
               </p>
@@ -125,9 +133,9 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
 
           <Panel title="Signatures" meta="hybrid classical + post-quantum">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="rounded-md border border-line-700 bg-base-950 p-3">
+              <div className="border border-rule-400 bg-paper-50 p-3" style={{ borderRadius: 2 }}>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="font-mono text-[11px] font-medium text-ink-200">Ed25519</span>
+                  <span className="text-[11px] font-bold text-ink-900">Ed25519</span>
                   <StatusBadge tone="ok">Valid</StatusBadge>
                 </div>
                 <CopyableValue label="Public key" value={receipt.signatures.ed25519.publicKey} />
@@ -135,9 +143,9 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
                   <CopyableValue label="Signature" value={receipt.signatures.ed25519.signature} />
                 </div>
               </div>
-              <div className="rounded-md border border-line-700 bg-base-950 p-3">
+              <div className="border border-rule-400 bg-paper-50 p-3" style={{ borderRadius: 2 }}>
                 <div className="mb-2 flex items-center justify-between">
-                  <span className="font-mono text-[11px] font-medium text-ink-200">ML-DSA-65 · FIPS 204</span>
+                  <span className="text-[11px] font-bold text-ink-900">ML-DSA-65 · FIPS 204</span>
                   <StatusBadge tone="ok">Valid</StatusBadge>
                 </div>
                 <CopyableValue label="Public key" value={receipt.signatures.mldsa65.publicKey} />
@@ -146,24 +154,27 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
                 </div>
               </div>
             </div>
-            <p className="mt-3 text-[11px] leading-relaxed text-ink-400">
+            <p className="mt-3 text-[11px] leading-relaxed text-ink-600">
               Validity shown reflects receipt construction. Run verification to re-evaluate signatures against the
               stored commitment.
             </p>
             {receipt.privacyCommitment.salt && (
-              <div className="mt-3 border-t border-line-700/60 pt-3">
-                <CopyableValue label="Commitment salt (institution-held)" value={receipt.privacyCommitment.salt} />
+              <div className="mt-3 border-t border-rule-400 pt-3">
+                <CopyableValue label="Commitment salt (held by the institution)" value={receipt.privacyCommitment.salt} />
               </div>
             )}
           </Panel>
 
           <div className="grid gap-4 sm:grid-cols-2">
-            <Panel title="Attestation" meta="Phala dstack">
-              <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-line-700/60 pb-2">
-                <span className="rounded border border-amber-600/40 bg-amber-950/40 px-1.5 py-0.5 font-mono text-[9px] font-semibold uppercase tracking-wider text-amber-300">
-                  SIMULATED / LOCAL DEMO
+            <Panel title="Enclave witness" meta="Phala dstack">
+              <div className="mb-2.5 flex items-center justify-between gap-2 border-b border-rule-400 pb-2">
+                <span
+                  className="border border-annotation-500 bg-annotation-50 px-1.5 py-0.5 text-[9px] font-bold uppercase text-annotation-500"
+                  style={{ borderRadius: 2 }}
+                >
+                  Simulated / local demo
                 </span>
-                <span className="text-[10px] text-ink-400">Browser mock of TEE quote</span>
+                <span className="text-[10px] text-ink-500">Browser mock of TEE quote</span>
               </div>
               <KeyValueGrid className="grid-cols-1">
                 <Field label="Provider">{receipt.teeAttestation.enclaveProvider}</Field>
@@ -175,12 +186,12 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
               </div>
               <div className="mt-3">
                 <StatusBadge tone={receipt.teeAttestation.enabled ? 'accent' : 'neutral'}>
-                  {receipt.teeAttestation.enabled ? 'Local demo · valid quote binding' : 'Not requested'}
+                  {receipt.teeAttestation.enabled ? 'Quote bound to this receipt (simulated)' : 'Not requested'}
                 </StatusBadge>
               </div>
             </Panel>
 
-            <Panel title="Transparency log" meta="RFC 6962">
+            <Panel title="Public log entry" meta="RFC 6962 append-only tree">
               <KeyValueGrid className="grid-cols-3">
                 <Field label="Log ID">{receipt.transparencyLog.logId}</Field>
                 <Field label="Tree size">{receipt.transparencyLog.treeSize}</Field>
@@ -188,41 +199,41 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
               </KeyValueGrid>
               <div className="mt-3 space-y-2">
                 <CopyableValue label="Leaf hash" value={receipt.transparencyLog.leafHash} />
-                <CopyableValue label="Merkle root" value={receipt.transparencyLog.merkleRoot} />
+                <CopyableValue label="Published tree root" value={receipt.transparencyLog.merkleRoot} />
               </div>
-              <p className="mt-3 font-mono text-[10px] text-ink-500">
+              <p className="mt-3 text-[10px] text-ink-500">
                 Inclusion proof: {receipt.transparencyLog.inclusionProof.length} sibling hashes
               </p>
             </Panel>
           </div>
         </div>
 
-        {/* ── Verification column ────────────────────────────────────────── */}
+        {/* ── The lab report — offline verification ──────────────────────── */}
         <div className="space-y-4 xl:col-span-5">
-          <Panel title="Offline verification" meta="0 vendor API calls">
-            <p className="mb-3 text-xs leading-relaxed text-ink-300">
-              Five independent checks must pass for this evidence to be considered authentic. Verification recomputes
-              commitments, signatures, enclave quote, and the Merkle inclusion proof entirely offline.
+          <Panel title="The examination" meta="zero vendor API calls">
+            <p className="mb-3 text-xs leading-relaxed text-ink-600">
+              Five independent checks must pass for this evidence to be considered authentic. The examination
+              recomputes fingerprints, signatures, enclave quote, and log inclusion entirely offline.
             </p>
             <Button variant="primary" className="w-full py-2.5" onClick={handleRunVerification} disabled={isVerifying}>
-              {isVerifying ? 'Evaluating 5 checks…' : 'Verify Evidence'}
+              {isVerifying ? 'Examining…' : 'Verify Evidence'}
             </Button>
           </Panel>
 
-          {isVerifying && <VerdictBanner verdict="pending" note="recomputing cryptographic checks" />}
+          {isVerifying && <VerdictStamp verdict="pending" note="recomputing cryptographic checks" />}
 
           {verificationResult && !isVerifying && (
             <>
-              <VerdictBanner
+              <VerdictStamp
                 verdict={verificationResult.isUnforged ? 'authentic' : 'tampered'}
                 receiptId={receipt.decisionId}
               />
-              <Panel title="Verification checks" meta={`${verificationResult.tamperErrors.length} anomalies`}>
+              <Panel title="Laboratory report" meta={`${verificationResult.tamperErrors.length} anomalies found`}>
                 <VerificationCheckList items={checksFromResult(verificationResult)} />
                 {verificationResult.tamperErrors.length > 0 && (
-                  <div className="mt-3 space-y-1.5 rounded-md border border-bad-900 bg-bad-950/50 p-3">
+                  <div className="mt-3 space-y-1.5 border border-stamp-500 bg-stamp-50 p-3" style={{ borderRadius: 2 }}>
                     {verificationResult.tamperErrors.map((err, i) => (
-                      <p key={i} className="break-words font-mono text-[11px] leading-relaxed text-bad-300">
+                      <p key={i} className="break-words text-[11px] leading-relaxed text-stamp-600">
                         [{i + 1}] {err}
                       </p>
                     ))}
@@ -230,7 +241,7 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
                 )}
               </Panel>
               <Panel title="Scope" meta="what this proves">
-                <p className="text-xs leading-relaxed text-ink-300">
+                <p className="text-xs leading-relaxed text-ink-700">
                   The AI decision may still be right or wrong. What is proven here is whether the evidence describing
                   what happened has been altered since it was sealed.
                 </p>
@@ -239,12 +250,12 @@ export const EvidenceReceiptTab: React.FC<EvidenceReceiptTabProps> = ({ receipt,
           )}
 
           {!verificationResult && !isVerifying && (
-            <Panel title="PII status" meta="privacy commitment">
+            <Panel title="Privacy" meta="what happens to PII">
               <div className="flex items-start gap-3">
-                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-ok-400" />
-                <p className="text-xs leading-relaxed text-ink-300">
-                  <span className="font-mono text-[11px] text-ok-300">PII sealed — not stored in evidence.</span> Raw
-                  applicant parameters exist only as salted SHA-256 commitments within this receipt.
+                <Lock className="mt-0.5 h-4 w-4 shrink-0 text-notary-600" />
+                <p className="text-xs leading-relaxed text-ink-700">
+                  <span className="font-bold text-notary-600">Sealed — no raw PII stored.</span> Applicant details
+                  exist only as salted SHA-256 fingerprints within this receipt.
                 </p>
               </div>
             </Panel>
