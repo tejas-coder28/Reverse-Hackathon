@@ -115,7 +115,7 @@ const verification = verifyReceipt(receipt);
 
 ## ⭐ Why CooL is Important to Our Solution
 
-> **"At the consequential AI decision boundary, CooL creates the cryptographic evidence that the rest of the application audits. Without this evidence layer, the application falls back to ordinary editable logs."**
+> **"At the consequential AI decision boundary, CooL creates the cryptographic evidence that the rest of the application audits. Without this evidence layer, the application falls back to ordinar[...]"
 
 | Challenge | Without CooL | With CooL |
 |-----------|-------------|----------|
@@ -300,7 +300,7 @@ graph TD
     B -->|Decision| C{Consequential<br/>Decision?}
     C -->|Yes| D[CooL Service Adapter<br/>src/cool/adapter.ts]
     D -->|cool.record| E[CooL Core SDK]
-    E --> F[Salted SHA-256<br/>PII Commitment<br/>H SALT : input||output]
+    E --> F[Salted SHA-256<br/>PII Commitment<br/>H SALT : input&#124;&#124;output]
     E --> G[Ed25519 +<br/>ML-DSA-65<br/>Hybrid Signatures]
     E --> H[Phala dstack<br/>TEE Quote]
     E --> I[RFC 6962<br/>Transparency Log<br/>Merkle Proof]
@@ -431,8 +431,7 @@ graph TD
 - **Post-Quantum Signature:** ML-DSA-65 a.k.a. Dilithium (FIPS 204)
 - **Random Generation:** `crypto.getRandomValues()` (Web Crypto API)
 
-### **Verification Checklist (5 Points)**
-1. ✓ Commitment hash is correctly computed
+### **Verification Checklist (5 Points)**n1. ✓ Commitment hash is correctly computed
 2. ✓ Ed25519 signature verifies
 3. ✓ ML-DSA-65 signature verifies
 4. ✓ TEE quote is authentic and recent
