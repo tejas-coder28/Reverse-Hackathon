@@ -64,13 +64,13 @@ export function Stamp({
         : 'border-rule-500 text-ink-600';
   const sizeCls =
     size === 'lg'
-      ? 'text-3xl sm:text-4xl px-6 py-3 border-[3px]'
+      ? 'text-2xl sm:text-4xl px-4 py-2 sm:px-6 sm:py-3 border-[3px]'
       : size === 'sm'
         ? 'text-sm px-2.5 py-1 border-2'
         : 'text-xl px-4 py-2 border-2';
   return (
     <span
-      className={`inline-block font-serif font-bold uppercase ${toneCls} ${sizeCls} ${animate ? 'animate-stamp' : ''} ${className}`}
+      className={`inline-block max-w-full text-center font-serif font-bold uppercase ${toneCls} ${sizeCls} ${animate ? 'animate-stamp' : ''} ${className}`}
       style={{
         borderRadius: 4,
         transform: `rotate(${angle}deg)`,

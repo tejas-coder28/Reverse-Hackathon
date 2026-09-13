@@ -109,7 +109,7 @@ export const OverviewTab: React.FC<OverviewTabProps> = ({ onStartDemo, setActive
           </div>
 
           {/* The live verdict stamp — latest decision in the file */}
-          <div className="flex shrink-0 flex-col items-center gap-2 pt-2 lg:pt-6">
+          <div className="flex min-w-0 max-w-full flex-col items-center gap-2 pt-2 lg:shrink-0 lg:pt-6">
             <Stamp
               tone={latest ? (latest.decision === 'APPROVED' ? 'green' : 'red') : 'gray'}
               size="lg"
