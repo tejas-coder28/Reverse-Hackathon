@@ -12,8 +12,15 @@ import type { CooLReceipt } from './evidence/types';
 import { evidenceService } from './services/evidenceService';
 import { seedDemoOnce } from './components/ui/demoSeed';
 
+const VALID_TABS: TabType[] = ['overview', 'simulator', 'receipt', 'dashboard', 'tamper'];
+
+function initialTabFromUrl(): TabType {
+  const param = new URLSearchParams(window.location.search).get('tab');
+  return VALID_TABS.includes(param as TabType) ? (param as TabType) : 'overview';
+}
+
 export function App() {
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>(initialTabFromUrl);
   const [activeReceipt, setActiveReceipt] = useState<CooLReceipt | null>(null);
   const [inspectingReceipt, setInspectingReceipt] = useState<CooLReceipt | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
