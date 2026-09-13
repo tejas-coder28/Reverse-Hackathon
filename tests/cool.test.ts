@@ -5,6 +5,8 @@ import { coolAdapter } from '../src/evidence/adapter';
 import { evidenceService } from '../src/services/evidenceService';
 import { PRESET_APPLICANTS, runCreditModel } from '../src/model/creditModel';
 
+import { getSigningKeys } from '../src/evidence/sign';
+
 describe('CooL SDK & AI Decision Evidence Protocol Suite', () => {
   beforeEach(() => {
     evidenceService.clearLedger();
@@ -145,4 +147,45 @@ describe('CooL SDK & AI Decision Evidence Protocol Suite', () => {
     expect(commitmentStr).not.toContain('existingDebt');
     expect(commitmentStr).not.toContain('145000');
   });
+
+  // TEST 9: Environment variable key overrides are respected over hardcoded demo keys
+  it('9. Environment variable key overrides are respected over hardcoded demo keys', async () => {
+    // 1. Initial state without custom env vars
+    const initialKeys = getSigningKeys();
+    expect(initialKeys.isCustomKeypair).toBe(false);
+
+    // 2. Set custom test secrets (32 bytes / 64 hex characters)
+    const customEdSecret = '1111111111111111111111111111111111111111111111111111111111111111';
+    const customMldsaSeed = '2222222222222222222222222222222222222222222222222222222222222222';
+    process.env.VITE_ED25519_SECRET_HEX = customEdSecret;
+    process.env.VITE_MLDSA_SEED_HEX = customMldsaSeed;
+
+    try {
+      const customKeys = getSigningKeys();
+      expect(customKeys.isCustomKeypair).toBe(true);
+      expect(customKeys.ed25519PublicKey).not.toBe(initialKeys.ed25519PublicKey);
+      expect(customKeys.mldsaPublicKey).not.toBe(initialKeys.mldsaPublicKey);
+
+      // 3. Test evidence recording under custom keys
+      const applicant = PRESET_APPLICANTS[0];
+      const { receipt } = await evidenceService.evaluateAndRecord(applicant);
+      expect(receipt?.signatures.ed25519.publicKey).toBe(customKeys.ed25519PublicKey);
+      expect(receipt?.signatures.mldsa65.publicKey).toBe(customKeys.mldsaPublicKey);
+
+      // 4. Test that verification passes using the custom public key
+      const check = await coolAdapter.verifyDecisionEvidence(receipt!);
+      expect(check.isUnforged).toBe(true);
+      expect(check.signatureValid).toBe(true);
+    } finally {
+      // Clean up env vars
+      delete process.env.VITE_ED25519_SECRET_HEX;
+      delete process.env.VITE_MLDSA_SEED_HEX;
+    }
+
+    // 5. Verify revert back to deterministic demo keys
+    const revertedKeys = getSigningKeys();
+    expect(revertedKeys.isCustomKeypair).toBe(false);
+    expect(revertedKeys.ed25519PublicKey).toBe(initialKeys.ed25519PublicKey);
+  });
 });
+

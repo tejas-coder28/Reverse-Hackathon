@@ -3,15 +3,66 @@ import { ml_dsa65 } from '@noble/post-quantum/ml-dsa.js';
 import { bytesToHex, hexToBytes } from '@noble/hashes/utils.js';
 import type { HybridSignatures } from './types';
 
-// Deterministic institutional keypairs for evidence signing
-// Ed25519 keypair
-const SYSTEM_ED25519_SECRET = hexToBytes('7a8f9c0b1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9c0b1e2d3c4b5a6f7e8d');
-const SYSTEM_ED25519_PUBKEY = bytesToHex(ed25519.getPublicKey(SYSTEM_ED25519_SECRET));
+// Deterministic institutional keypair fallbacks for reproducible grading and demoing
+const DEFAULT_ED25519_SECRET_HEX = '7a8f9c0b1e2d3c4b5a6f7e8d9c0b1a2f3e4d5c6b7a8f9c0b1e2d3c4b5a6f7e8d';
+const DEFAULT_MLDSA_SEED_HEX = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
-// ML-DSA-65 (FIPS 204) Post-Quantum Keypair
-const MLDSA_SEED = hexToBytes('0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef');
-const SYSTEM_MLDSA65_KEYS = ml_dsa65.keygen(MLDSA_SEED);
-const SYSTEM_MLDSA65_PUBKEY = bytesToHex(SYSTEM_MLDSA65_KEYS.publicKey);
+function getEnv(key: string): string | undefined {
+  try {
+    if (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env[key]) {
+      return import.meta.env[key];
+    }
+  } catch {}
+  try {
+    const proc = typeof globalThis !== 'undefined' ? (globalThis as any).process : undefined;
+    if (proc?.env?.[key]) {
+      return proc.env[key];
+    }
+  } catch {}
+  return undefined;
+}
+
+export interface KeypairContext {
+  ed25519Secret: Uint8Array;
+  ed25519PublicKey: string;
+  mldsaSecret: Uint8Array;
+  mldsaPublicKey: string;
+  isCustomKeypair: boolean;
+}
+
+/**
+ * Loads institutional signing keys.
+ * Priority:
+ * 1. Environment variables VITE_ED25519_SECRET_HEX & VITE_MLDSA_SEED_HEX (64-char hex)
+ * 2. Deterministic demo fallback keypairs (for reproducible grading / offline demo)
+ */
+export function getSigningKeys(): KeypairContext {
+  const envEdSecret = getEnv('VITE_ED25519_SECRET_HEX');
+  const envMldsaSeed = getEnv('VITE_MLDSA_SEED_HEX');
+
+  const edSecretHex = envEdSecret && /^[0-9a-fA-F]{64}$/.test(envEdSecret)
+    ? envEdSecret
+    : DEFAULT_ED25519_SECRET_HEX;
+
+  const mldsaSeedHex = envMldsaSeed && /^[0-9a-fA-F]{64}$/.test(envMldsaSeed)
+    ? envMldsaSeed
+    : DEFAULT_MLDSA_SEED_HEX;
+
+  const ed25519Secret = hexToBytes(edSecretHex);
+  const ed25519PublicKey = bytesToHex(ed25519.getPublicKey(ed25519Secret));
+
+  const mldsaSeed = hexToBytes(mldsaSeedHex);
+  const mldsaKeys = ml_dsa65.keygen(mldsaSeed);
+  const mldsaPublicKey = bytesToHex(mldsaKeys.publicKey);
+
+  return {
+    ed25519Secret,
+    ed25519PublicKey,
+    mldsaSecret: mldsaKeys.secretKey,
+    mldsaPublicKey,
+    isCustomKeypair: Boolean(envEdSecret || envMldsaSeed),
+  };
+}
 
 /**
  * Sign payload using REAL hybrid cryptography:
@@ -20,23 +71,24 @@ const SYSTEM_MLDSA65_PUBKEY = bytesToHex(SYSTEM_MLDSA65_KEYS.publicKey);
  */
 export async function createHybridSignatures(payloadHash: string): Promise<HybridSignatures> {
   const msg = new TextEncoder().encode(payloadHash);
+  const keys = getSigningKeys();
 
   // 1. Real Ed25519 signature
-  const edSigBytes = ed25519.sign(msg, SYSTEM_ED25519_SECRET);
+  const edSigBytes = ed25519.sign(msg, keys.ed25519Secret);
   const ed25519SigHex = bytesToHex(edSigBytes);
 
   // 2. Real ML-DSA-65 (Dilithium FIPS 204) signature
-  const mldsaSigBytes = ml_dsa65.sign(msg, SYSTEM_MLDSA65_KEYS.secretKey);
+  const mldsaSigBytes = ml_dsa65.sign(msg, keys.mldsaSecret);
   const mldsa65SigHex = bytesToHex(mldsaSigBytes);
 
   return {
     ed25519: {
-      publicKey: SYSTEM_ED25519_PUBKEY,
+      publicKey: keys.ed25519PublicKey,
       signature: ed25519SigHex,
       algorithm: 'Ed25519',
     },
     mldsa65: {
-      publicKey: SYSTEM_MLDSA65_PUBKEY,
+      publicKey: keys.mldsaPublicKey,
       signature: mldsa65SigHex,
       algorithm: 'ML-DSA-65 (FIPS 204)',
     },
