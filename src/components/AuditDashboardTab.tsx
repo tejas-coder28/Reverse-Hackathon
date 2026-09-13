@@ -1,14 +1,19 @@
 import React, { useState, useEffect } from 'react';
-import { Database, Search, Filter, Download, Code, CheckCircle2, AlertOctagon, RefreshCw, Check, X } from 'lucide-react';
+import { RefreshCw, Download, Search } from 'lucide-react';
 import type { CooLReceipt, VerificationCheckResult } from '../cool/types';
 import { evidenceService } from '../services/evidenceService';
+import { Button, Panel, StatusBadge, SectionHeader } from './ui/primitives';
+import { DataTable, type DataTableColumn } from './ui/DataTable';
+import { decisionTone, formatClock, shortHash } from './ui/format';
 
 interface AuditDashboardTabProps {
   onInspectReceipt: (receipt: CooLReceipt) => void;
 }
 
+type LedgerRow = CooLReceipt & { id: string };
+
 export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectReceipt }) => {
-  const [receipts, setReceipts] = useState<CooLReceipt[]>([]);
+  const [receipts, setReceipts] = useState<LedgerRow[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDecision, setFilterDecision] = useState<string>('ALL');
   const [verificationMap, setVerificationMap] = useState<Record<string, VerificationCheckResult>>({});
@@ -16,7 +21,7 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
 
   const loadData = () => {
     const list = evidenceService.getAllReceipts();
-    setReceipts(list);
+    setReceipts(list.map((r) => ({ ...r, id: r.decisionId })));
   };
 
   useEffect(() => {
@@ -63,192 +68,155 @@ export const AuditDashboardTab: React.FC<AuditDashboardTabProps> = ({ onInspectR
     downloadAnchor.remove();
   };
 
+  const verifiedCount = receipts.filter((r) => verificationMap[r.decisionId]?.isUnforged === true).length;
+  const anomalyCount = receipts.filter(
+    (r) => verificationMap[r.decisionId] && verificationMap[r.decisionId].isUnforged === false
+  ).length;
+
+  const columns: Array<DataTableColumn<LedgerRow>> = [
+    {
+      key: 'receipt',
+      header: 'Receipt ID',
+      render: (r) => (
+        <div className="min-w-0">
+          <div className="font-mono text-xs text-accent-300">{shortHash(r.decisionId, 12, 6)}</div>
+          <div className="truncate font-mono text-[10px] text-ink-500">{r.applicantId}</div>
+        </div>
+      ),
+    },
+    { key: 'time', header: 'Time', render: (r) => <span className="font-mono text-ink-300">{formatClock(r.timestamp)}</span> },
+    { key: 'model', header: 'Model', render: (r) => <span className="font-mono text-[11px] text-ink-200">{r.modelId} · {r.modelVersion}</span> },
+    {
+      key: 'decision',
+      header: 'Decision',
+      render: (r) => <StatusBadge tone={decisionTone(r.decision)}>{r.decision}</StatusBadge>,
+    },
+    {
+      key: 'commitment',
+      header: 'Commitment',
+      render: (r) => (
+        <span className="font-mono text-[11px] text-ink-300" title={r.privacyCommitment.combinedStateHash}>
+          {shortHash(r.privacyCommitment.combinedStateHash, 8, 6)}
+        </span>
+      ),
+    },
+    {
+      key: 'integrity',
+      header: 'Integrity',
+      render: (r) => {
+        const verification = verificationMap[r.decisionId];
+        if (verifyingId === r.decisionId) {
+          return (
+            <span className="inline-flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-wider text-accent-300">
+              <RefreshCw className="h-3 w-3 animate-spin" />
+              Verifying
+            </span>
+          );
+        }
+        if (!verification) {
+          return <span className="font-mono text-[10px] uppercase tracking-wider text-ink-500">Pending</span>;
+        }
+        return verification.isUnforged ? (
+          <StatusBadge tone="ok">Verified</StatusBadge>
+        ) : (
+          <StatusBadge tone="bad">Tampered</StatusBadge>
+        );
+      },
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'text-right',
+      render: (r) => (
+        <div className="flex justify-end gap-1.5">
+          <Button variant="ghost" onClick={() => handleVerifySingle(r)}>
+            Verify
+          </Button>
+          <Button variant="ghost" onClick={() => onInspectReceipt(r)}>
+            Open
+          </Button>
+          <Button variant="ghost" onClick={() => handleExportJSON()}>
+            <Download className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
   return (
-    <div className="space-y-8 pb-12">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="text-xs font-mono font-bold tracking-wider text-cyan-400 uppercase mb-1">
-            FLOW 2 — AUDIT
+    <div className="space-y-6 pb-12">
+      <SectionHeader
+        eyebrow="Verification Console"
+        title="Decision evidence ledger"
+        description="Every consequential decision recorded in this session with its cryptographic evidence status. Verification recomputes all five checks offline."
+        actions={
+          <div className="flex items-center gap-2">
+            <Button variant="secondary" onClick={loadData}>
+              <RefreshCw className="h-4 w-4" />
+              Refresh
+            </Button>
+            <Button variant="primary" onClick={handleExportJSON}>
+              <Download className="h-4 w-4" />
+              Export JSON
+            </Button>
           </div>
-          <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            <Database className="h-6 w-6 text-cyan-400" />
-            <span>Institutional AI Decision Audit Ledger</span>
-          </h2>
-          <p className="text-xs text-slate-400">
-            Immutable RFC 6962 Transparency Log & Offline Verification Ledger ({receipts.length} Decisions Logged)
-          </p>
-        </div>
+        }
+      />
 
-        <div className="flex items-center space-x-3">
-          <button
-            onClick={loadData}
-            className="flex items-center space-x-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-300 hover:bg-slate-800"
-          >
-            <RefreshCw className="h-4 w-4" />
-            <span>Refresh</span>
-          </button>
-
-          <button
-            onClick={handleExportJSON}
-            className="flex items-center space-x-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-cyan-500/20 hover:scale-[1.02] transition-all"
-          >
-            <Download className="h-4 w-4" />
-            <span>Export Evidence Ledger (JSON)</span>
-          </button>
-        </div>
+      {/* Summary strip */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        <Panel bodyClassName="p-4">
+          <div className="flex items-baseline justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Receipts logged</span>
+            <span className="font-mono text-2xl font-semibold text-ink-100">{receipts.length}</span>
+          </div>
+        </Panel>
+        <Panel bodyClassName="p-4">
+          <div className="flex items-baseline justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Verified authentic</span>
+            <span className="font-mono text-2xl font-semibold text-ok-300">{verifiedCount}</span>
+          </div>
+        </Panel>
+        <Panel bodyClassName="p-4">
+          <div className="flex items-baseline justify-between">
+            <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Anomalies detected</span>
+            <span className={`font-mono text-2xl font-semibold ${anomalyCount > 0 ? 'text-bad-300' : 'text-ink-100'}`}>
+              {anomalyCount}
+            </span>
+          </div>
+        </Panel>
+        <Panel className="sm:col-span-3 border-line-700/60" bodyClassName="p-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+            <div className="relative flex-1">
+              <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-500" />
+              <input
+                type="text"
+                placeholder="Search applicant or receipt ID…"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="input pl-8"
+              />
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-ink-400">Decision</span>
+              <select
+                value={filterDecision}
+                onChange={(e) => setFilterDecision(e.target.value)}
+                className="select w-44"
+              >
+                <option value="ALL">All decisions</option>
+                <option value="APPROVED">Approved</option>
+                <option value="MANUAL_REVIEW">Manual review</option>
+                <option value="REJECTED">Rejected</option>
+              </select>
+            </div>
+          </div>
+        </Panel>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-900/60 p-4">
-        <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-500" />
-          <input
-            type="text"
-            placeholder="Search Applicant or Decision ID..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-slate-700 bg-slate-950 pl-9 pr-3 py-1.5 text-xs text-white placeholder-slate-500 focus:border-cyan-500 focus:outline-none font-mono"
-          />
-        </div>
-
-        <div className="flex items-center space-x-2 w-full sm:w-auto">
-          <Filter className="h-4 w-4 text-slate-400 shrink-0" />
-          <span className="text-xs text-slate-400">Filter Decision:</span>
-          <select
-            value={filterDecision}
-            onChange={(e) => setFilterDecision(e.target.value)}
-            className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-1.5 text-xs text-white focus:border-cyan-500 focus:outline-none font-mono"
-          >
-            <option value="ALL">ALL DECISIONS</option>
-            <option value="APPROVED">APPROVED</option>
-            <option value="MANUAL_REVIEW">MANUAL_REVIEW</option>
-            <option value="REJECTED">REJECTED</option>
-          </select>
-        </div>
-      </div>
-
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/80 overflow-hidden shadow-xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs text-slate-300">
-            <thead className="border-b border-slate-800 bg-slate-950 font-mono text-[11px] uppercase tracking-wider text-slate-400">
-              <tr>
-                <th className="px-4 py-3.5">Decision ID & Applicant</th>
-                <th className="px-4 py-3.5">AI Decision</th>
-                <th className="px-4 py-3.5">Salted PII Commitment</th>
-                <th className="px-4 py-3.5">Individual Verification Checks</th>
-                <th className="px-4 py-3.5">Overall Status</th>
-                <th className="px-4 py-3.5 text-right">Actions</th>
-              </tr>
-            </thead>
-
-            <tbody className="divide-y divide-slate-800/60 font-mono">
-              {filteredReceipts.length > 0 ? (
-                filteredReceipts.map((r) => {
-                  const verification = verificationMap[r.decisionId];
-                  const isVerifying = verifyingId === r.decisionId;
-
-                  return (
-                    <tr key={r.decisionId} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="px-4 py-4 space-y-0.5">
-                        <div className="font-bold text-white text-xs">{r.applicantId}</div>
-                        <div className="text-[11px] text-cyan-400">{r.decisionId}</div>
-                        <div className="text-[10px] text-slate-500">{new Date(r.timestamp).toLocaleString()}</div>
-                      </td>
-
-                      <td className="px-4 py-4">
-                        <span className={`inline-block px-2.5 py-1 rounded-md text-[11px] font-bold ${
-                          r.decision === 'APPROVED' ? 'bg-emerald-950/80 text-emerald-400 border border-emerald-800/60' :
-                          r.decision === 'MANUAL_REVIEW' ? 'bg-amber-950/80 text-amber-400 border border-amber-800/60' :
-                          'bg-rose-950/80 text-rose-400 border border-rose-800/60'
-                        }`}>
-                          {r.decision}
-                        </span>
-                      </td>
-
-                      <td className="px-4 py-4 max-w-[180px]">
-                        <div className="text-[11px] text-cyan-300 truncate">
-                          {r.privacyCommitment.combinedStateHash}
-                        </div>
-                        <div className="text-[10px] text-slate-500">Salt: {r.privacyCommitment.salt.substring(0, 10)}...</div>
-                      </td>
-
-                      {/* Individual Verification Checks Breakdown */}
-                      <td className="px-4 py-4 space-y-1 text-[10px]">
-                        {verification ? (
-                          <>
-                            <div className="flex items-center space-x-1">
-                              {verification.signatureValid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-rose-400" />}
-                              <span className={verification.signatureValid ? 'text-slate-300' : 'text-rose-400 font-bold'}>
-                                Hybrid Sigs (Ed25519/ML-DSA-65)
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              {verification.transparencyLogValid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-rose-400" />}
-                              <span className={verification.transparencyLogValid ? 'text-slate-300' : 'text-rose-400 font-bold'}>
-                                Merkle Log (RFC 6962)
-                              </span>
-                            </div>
-                            <div className="flex items-center space-x-1">
-                              {verification.teeAttestationValid ? <Check className="h-3 w-3 text-emerald-400" /> : <X className="h-3 w-3 text-rose-400" />}
-                              <span className={verification.teeAttestationValid ? 'text-slate-300' : 'text-rose-400 font-bold'}>
-                                TEE dstack Quote
-                              </span>
-                            </div>
-                          </>
-                        ) : (
-                          <span className="text-slate-500">Evaluating checks...</span>
-                        )}
-                      </td>
-
-                      {/* Overall Status */}
-                      <td className="px-4 py-4">
-                        {isVerifying ? (
-                          <div className="flex items-center space-x-1.5 text-cyan-400">
-                            <div className="h-3 w-3 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-                            <span>Verifying...</span>
-                          </div>
-                        ) : verification ? (
-                          verification.isUnforged ? (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-emerald-950/80 border border-emerald-800/60 px-2 py-0.5 text-[11px] font-semibold text-emerald-400">
-                              <CheckCircle2 className="h-3.5 w-3.5" /> UNFORGED
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-rose-950/80 border border-rose-800/60 px-2 py-0.5 text-[11px] font-semibold text-rose-400">
-                              <AlertOctagon className="h-3.5 w-3.5" /> TAMPERED
-                            </span>
-                          )
-                        ) : (
-                          <span className="text-slate-500">Pending</span>
-                        )}
-                      </td>
-
-                      <td className="px-4 py-4 text-right space-x-2">
-                        <button
-                          onClick={() => handleVerifySingle(r)}
-                          className="rounded-lg bg-slate-800 hover:bg-slate-700 px-2.5 py-1 text-[11px] font-semibold text-cyan-300 border border-slate-700"
-                        >
-                          cool verify
-                        </button>
-                        <button
-                          onClick={() => onInspectReceipt(r)}
-                          className="rounded-lg bg-cyan-950 hover:bg-cyan-900 px-2.5 py-1 text-[11px] font-semibold text-cyan-400 border border-cyan-800/60"
-                        >
-                          <Code className="h-3.5 w-3.5 inline mr-1" /> Inspect
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
-              ) : (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500 font-sans">
-                    No decision receipts match search or filter criteria.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <Panel title="Evidence ledger" meta={`${filteredReceipts.length} of ${receipts.length} receipts`} bodyClassName="p-0">
+        <DataTable columns={columns} rows={filteredReceipts} emptyMessage="No receipts match the current search or filter." />
+      </Panel>
     </div>
   );
 };

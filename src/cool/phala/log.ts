@@ -88,23 +88,53 @@ export async function verifyTransparencyLog(
     };
   }
 
-  if (proof.treeSize === 1 && proof.inclusionProof.length === 0) {
+  if (proof.treeSize === 1) {
+    if (proof.inclusionProof.length > 0) {
+      return { valid: false, reason: 'Single-node tree must not carry inclusion proof elements.' };
+    }
     if (proof.merkleRoot !== expectedLeaf) {
       return { valid: false, reason: 'Merkle root mismatch for single-node tree.' };
     }
     return { valid: true };
   }
 
+  /*
+   * Replay the inclusion proof level-by-level, mirroring the exact tree shape
+   * that appendToTransparencyLog/generateInclusionProof built. Levels whose
+   * node count is odd end with an unpaired (odd-tail) node that is carried up
+   * WITHOUT a sibling hash; such levels contribute no proof element. Replaying
+   * one proof entry per level (as before) diverged from the generator for any
+   * tree with an odd number of leaves >= 3, producing false tamper verdicts.
+   */
   let currentHash = expectedLeaf;
-  let idx = proof.leafIndex;
+  let index = proof.leafIndex;
+  let levelSize = proof.treeSize;
+  let siblingIdx = 0;
 
-  for (const siblingHash of proof.inclusionProof) {
-    if (idx % 2 === 0) {
-      currentHash = await sha256Hex(`01${currentHash}${siblingHash}`);
-    } else {
+  while (levelSize > 1 && siblingIdx < proof.inclusionProof.length) {
+    if (index % 2 === 1) {
+      // Node is right-paired: left sibling must be consumed.
+      const siblingHash = proof.inclusionProof[siblingIdx];
       currentHash = await sha256Hex(`01${siblingHash}${currentHash}`);
+      siblingIdx++;
+    } else if (index + 1 < levelSize) {
+      // Node is left-paired and a right sibling exists: consume it.
+      const siblingHash = proof.inclusionProof[siblingIdx];
+      currentHash = await sha256Hex(`01${currentHash}${siblingHash}`);
+      siblingIdx++;
     }
-    idx = Math.floor(idx / 2);
+    // else: unpaired odd-tail node — carried up without a proof element.
+
+    index = Math.floor(index / 2);
+    levelSize = Math.ceil(levelSize / 2);
+  }
+
+  // Leftover proof entries mean the proof does not match this tree shape.
+  if (siblingIdx !== proof.inclusionProof.length) {
+    return {
+      valid: false,
+      reason: `Inclusion proof length mismatch for tree of size ${proof.treeSize}.`,
+    };
   }
 
   if (currentHash !== proof.merkleRoot) {

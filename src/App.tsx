@@ -10,6 +10,7 @@ import { TamperLabTab } from './components/TamperLabTab';
 import { ReceiptInspectorModal } from './components/ReceiptInspectorModal';
 import type { CooLReceipt } from './cool/types';
 import { evidenceService } from './services/evidenceService';
+import { seedDemoOnce } from './components/ui/demoSeed';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
@@ -18,12 +19,15 @@ export function App() {
   const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
-    const init = async () => {
-      const demoReceipt = await evidenceService.seedDemoIfEmpty();
+    let cancelled = false;
+    seedDemoOnce().then((demoReceipt) => {
+      if (cancelled) return;
       setActiveReceipt(demoReceipt);
       setTotalCount(evidenceService.getAllReceipts().length);
+    });
+    return () => {
+      cancelled = true;
     };
-    init();
   }, []);
 
   const handleReceiptCreated = (receipt: CooLReceipt) => {
@@ -31,8 +35,13 @@ export function App() {
     setTotalCount(evidenceService.getAllReceipts().length);
   };
 
+  const openVerification = (receipt: CooLReceipt) => {
+    setActiveReceipt(receipt);
+    setActiveTab('receipt');
+  };
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-cyan-500 selection:text-slate-950">
+    <div className="flex min-h-screen flex-col bg-base-950 text-ink-100">
       <Header
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -41,7 +50,7 @@ export function App() {
 
       <DisclaimerBanner />
 
-      <main className="flex-1 mx-auto max-w-7xl w-full px-4 sm:px-6 pt-6">
+      <main className="mx-auto w-full max-w-[1400px] flex-1 px-4 py-6 sm:px-6">
         {activeTab === 'overview' && (
           <OverviewTab
             onStartDemo={() => setActiveTab('simulator')}
@@ -66,10 +75,7 @@ export function App() {
 
         {activeTab === 'dashboard' && (
           <AuditDashboardTab
-            onInspectReceipt={(r) => {
-              setActiveReceipt(r);
-              setInspectingReceipt(r);
-            }}
+            onInspectReceipt={openVerification}
           />
         )}
 
@@ -81,17 +87,14 @@ export function App() {
         onClose={() => setInspectingReceipt(null)}
       />
 
-      <footer className="border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500 font-mono">
-        <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
-          <div>
-            CooL.ledger © 2026 · Cryptographic AI Decision Evidence & Audit Platform
-          </div>
-          <div className="flex items-center space-x-4 text-cyan-400">
-            <span>EU AI Act Art. 12</span>
-            <span>CA AB 316</span>
-            <span>Phala dstack-TEE</span>
-            <span>RFC 6962</span>
-          </div>
+      <footer className="border-t border-line-700 bg-base-950">
+        <div className="mx-auto flex max-w-[1400px] flex-col items-start justify-between gap-2 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
+          <p className="font-mono text-[11px] text-ink-400">
+            CooL.ledger — AI Decision Evidence &amp; Audit Platform · Demo environment
+          </p>
+          <p className="font-mono text-[10px] uppercase tracking-wider text-ink-500">
+            SHA-256 · Ed25519 · ML-DSA-65 (FIPS 204) · Phala dstack TEE · RFC 6962
+          </p>
         </div>
       </footer>
     </div>
