@@ -4,6 +4,7 @@ import type { TabType } from './components/Header';
 import { DisclaimerBanner } from './components/DisclaimerBanner';
 import { OverviewTab } from './components/OverviewTab';
 import { SimulatorTab } from './components/SimulatorTab';
+import { EvidenceReceiptTab } from './components/EvidenceReceiptTab';
 import { AuditDashboardTab } from './components/AuditDashboardTab';
 import { TamperLabTab } from './components/TamperLabTab';
 import { ReceiptInspectorModal } from './components/ReceiptInspectorModal';
@@ -12,18 +13,21 @@ import { evidenceService } from './services/evidenceService';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeReceipt, setActiveReceipt] = useState<CooLReceipt | null>(null);
   const [inspectingReceipt, setInspectingReceipt] = useState<CooLReceipt | null>(null);
   const [totalCount, setTotalCount] = useState<number>(0);
 
   useEffect(() => {
     const init = async () => {
-      await evidenceService.seedDemoIfEmpty();
+      const demoReceipt = await evidenceService.seedDemoIfEmpty();
+      setActiveReceipt(demoReceipt);
       setTotalCount(evidenceService.getAllReceipts().length);
     };
     init();
   }, []);
 
-  const handleReceiptCreated = (_receipt: CooLReceipt) => {
+  const handleReceiptCreated = (receipt: CooLReceipt) => {
+    setActiveReceipt(receipt);
     setTotalCount(evidenceService.getAllReceipts().length);
   };
 
@@ -49,12 +53,23 @@ export function App() {
           <SimulatorTab
             onReceiptCreated={handleReceiptCreated}
             onInspectReceipt={(r) => setInspectingReceipt(r)}
+            onNavigateToReceiptView={() => setActiveTab('receipt')}
+          />
+        )}
+
+        {activeTab === 'receipt' && (
+          <EvidenceReceiptTab
+            receipt={activeReceipt}
+            onInspectRaw={(r) => setInspectingReceipt(r)}
           />
         )}
 
         {activeTab === 'dashboard' && (
           <AuditDashboardTab
-            onInspectReceipt={(r) => setInspectingReceipt(r)}
+            onInspectReceipt={(r) => {
+              setActiveReceipt(r);
+              setInspectingReceipt(r);
+            }}
           />
         )}
 
@@ -66,10 +81,10 @@ export function App() {
         onClose={() => setInspectingReceipt(null)}
       />
 
-      <footer className="border-t border-slate-800 bg-slate-950 py-6 text-center text-xs text-slate-500 font-mono">
+      <footer className="border-t border-slate-800/80 bg-slate-950 py-6 text-center text-xs text-slate-500 font-mono">
         <div className="mx-auto max-w-7xl px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div>
-            CooL.ledger © 2026 · AI Decision Evidence & Non-Repudiation Architecture
+            CooL.ledger © 2026 · Cryptographic AI Decision Evidence & Audit Platform
           </div>
           <div className="flex items-center space-x-4 text-cyan-400">
             <span>EU AI Act Art. 12</span>
