@@ -96,9 +96,14 @@ export function App() {
 
       <footer className="border-t-2 border-rule-600 bg-folder-600">
         <div className="mx-auto flex max-w-[1400px] flex-col items-start justify-between gap-2 px-4 py-4 sm:flex-row sm:items-center sm:px-6">
+        <div className="flex flex-col gap-1">
           <p className="text-[11px] text-ink-700">
             CooL.ledger · Evidence Room for AI Decisions · Demo environment
           </p>
+          <p className="text-[11px] text-ink-600">
+            Built for Reverse Hackathon by Team Beta Onepiece
+          </p>
+        </div>
           <p className="text-[10px] uppercase tracking-[0.08em] text-ink-500">
             SHA-256 · Ed25519 · ML-DSA-65 (FIPS 204) · Phala dstack TEE · RFC 6962
           </p>
