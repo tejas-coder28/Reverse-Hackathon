@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { FileDiff, RotateCcw, ShieldAlert, CheckCircle2, XCircle } from 'lucide-react';
+import { FileDiff, RotateCcw, ShieldAlert } from 'lucide-react';
 import type { CooLReceipt, VerificationCheckResult } from '../evidence/types';
 import { evidenceService } from '../services/evidenceService';
 import { seedDemoOnce } from './ui/demoSeed';
 import { Button, Panel, StatusBadge, SectionHeader } from './ui/primitives';
-import { VerificationCheckList, VerdictBanner, checksFromResult } from './ui/verification';
+import { VerificationCheckList, VerdictStamp, checksFromResult } from './ui/verification';
 import { shortHash } from './ui/format';
 
 export const TamperLabTab: React.FC = () => {
@@ -80,7 +80,7 @@ export const TamperLabTab: React.FC = () => {
   if (!editedReceipt || !verificationResult) {
     return (
       <Panel title="Tamper Lab">
-        <p className="py-8 text-center font-mono text-xs text-ink-400">Loading evidence record…</p>
+        <p className="py-8 text-center text-xs text-ink-500">Pulling the exhibit from the evidence room…</p>
       </Panel>
     );
   }
@@ -95,35 +95,35 @@ export const TamperLabTab: React.FC = () => {
       modified: editedReceipt.decision,
     },
     {
-      label: 'SHA-256 commitment',
+      label: 'Decision fingerprint',
       original: originalReceipt?.privacyCommitment.combinedStateHash ?? '',
       modified: editedReceipt.privacyCommitment.combinedStateHash,
     },
     {
-      label: 'Ed25519 signature',
+      label: 'Institution signature',
       original: originalReceipt?.signatures.ed25519.signature ?? '',
       modified: editedReceipt.signatures.ed25519.signature,
     },
     {
-      label: 'Merkle root (RFC 6962)',
+      label: 'Public log root',
       original: originalReceipt?.transparencyLog.merkleRoot ?? '',
       modified: editedReceipt.transparencyLog.merkleRoot,
     },
   ];
 
   const tamperScenarios: Array<{ id: string; title: string; description: string }> = [
-    { id: 'DECISION_FLIPPED', title: 'Flip decision outcome', description: 'APPROVED → REJECTED after the fact' },
-    { id: 'INCOME_ALTERED', title: 'Alter input parameters', description: 'Income $145,000 → $15,000 vs sealed commitment' },
-    { id: 'SIGNATURE_FORGED', title: 'Forge Ed25519 signature', description: 'Substitute institutional key signature' },
-    { id: 'MERKLE_ROOT_ALTERED', title: 'Mutate Merkle root', description: 'Rewrite RFC 6962 tree root hash' },
+    { id: 'DECISION_FLIPPED', title: 'Flip the decision', description: 'An approved loan is rewritten as rejected — or the reverse' },
+    { id: 'INCOME_ALTERED', title: 'Alter the applicant\'s income', description: 'Stated income changed after sealing, against the fingerprint' },
+    { id: 'SIGNATURE_FORGED', title: 'Forge the institution\'s signature', description: 'Substitute a fake signature on the receipt' },
+    { id: 'MERKLE_ROOT_ALTERED', title: 'Rewrite the public log', description: 'Swap the tree root to hide the original entry' },
   ];
 
   return (
     <div className="space-y-6 pb-12">
       <SectionHeader
-        eyebrow="Tamper Lab"
-        title="Controlled tamper demonstration"
-        description="Modify a copy of a sealed receipt and watch the offline verifier fail closed. Nothing here touches the stored ledger — the original receipt is preserved and can be restored at any time."
+        eyebrow="Tamper Lab · Contaminated exhibits"
+        title="Try to alter sealed evidence"
+        description="Modify a copy of a sealed receipt and watch the offline examiner fail closed. Nothing here touches the stored ledger — the original is preserved and can be restored at any time."
         actions={
           <Button variant="success" onClick={handleRestoreOriginal} disabled={isVerifying}>
             <RotateCcw className="h-4 w-4" />
@@ -133,9 +133,9 @@ export const TamperLabTab: React.FC = () => {
       />
 
       <div className="grid gap-4 xl:grid-cols-12">
-        {/* ── Attack selection + payload editor ──────────────────────────── */}
+        {/* ── Charge sheet + payload editor ───────────────────────────────── */}
         <div className="space-y-4 xl:col-span-5">
-          <Panel title="Tamper scenario" meta="select a modification vector">
+          <Panel title="Ways to contaminate the exhibit" meta="choose one and the examiner reacts">
             <ul className="space-y-1.5">
               {tamperScenarios.map((s) => (
                 <li key={s.id}>
@@ -143,17 +143,18 @@ export const TamperLabTab: React.FC = () => {
                     type="button"
                     onClick={() => applyTamper(s.id)}
                     disabled={isVerifying}
-                    className={`flex w-full items-center justify-between gap-3 rounded-md border px-3 py-2.5 text-left transition-colors ${
+                    className={`flex w-full items-center justify-between gap-3 border px-3 py-2.5 text-left transition-colors ${
                       activeTamperMode === s.id
-                        ? 'border-bad-500/70 bg-bad-950/60'
-                        : 'border-line-700 bg-base-850 hover:border-line-600'
+                        ? 'border-stamp-500 bg-stamp-50'
+                        : 'border-rule-400 bg-paper-200/60 hover:border-rule-600'
                     }`}
+                    style={{ borderRadius: 2 }}
                   >
                     <span className="min-w-0">
-                      <span className={`block text-[13px] font-medium ${activeTamperMode === s.id ? 'text-bad-200' : 'text-ink-100'}`}>
+                      <span className={`block text-[13px] font-bold ${activeTamperMode === s.id ? 'text-stamp-600' : 'text-ink-900'}`}>
                         {s.title}
                       </span>
-                      <span className="mt-0.5 block font-mono text-[10px] text-ink-400">{s.description}</span>
+                      <span className="mt-0.5 block text-[10px] text-ink-600">{s.description}</span>
                     </span>
                     {activeTamperMode === s.id && <StatusBadge tone="bad">Active</StatusBadge>}
                   </button>
@@ -162,11 +163,11 @@ export const TamperLabTab: React.FC = () => {
             </ul>
           </Panel>
 
-          <Panel title="Payload editor" meta={tampered ? `modified · ${activeTamperMode}` : 'original · unmodified'}>
+          <Panel title="Edit the evidence by hand" meta={tampered ? `modified · ${activeTamperMode}` : 'original · unmodified'}>
             <div className="space-y-3">
               <div>
                 <label className="label" htmlFor="tl-decision">
-                  Decision outcome
+                  Recorded decision
                 </label>
                 <select
                   id="tl-decision"
@@ -175,7 +176,7 @@ export const TamperLabTab: React.FC = () => {
                     setEditedReceipt({ ...editedReceipt, decision: e.target.value as CooLReceipt['decision'] });
                     setActiveTamperMode('MANUAL_EDIT');
                   }}
-                  className="select font-mono"
+                  className="select"
                 >
                   <option value="APPROVED">APPROVED</option>
                   <option value="MANUAL_REVIEW">MANUAL_REVIEW</option>
@@ -184,7 +185,7 @@ export const TamperLabTab: React.FC = () => {
               </div>
               <div>
                 <label className="label" htmlFor="tl-hash">
-                  Salted state commitment hash
+                  Decision fingerprint
                 </label>
                 <input
                   id="tl-hash"
@@ -197,12 +198,12 @@ export const TamperLabTab: React.FC = () => {
                     });
                     setActiveTamperMode('MANUAL_EDIT');
                   }}
-                  className="input font-mono text-[11px]"
+                  className="input text-[11px]"
                 />
               </div>
               <div>
                 <label className="label" htmlFor="tl-sig">
-                  Ed25519 signature string
+                  Institution signature string
                 </label>
                 <input
                   id="tl-sig"
@@ -218,12 +219,12 @@ export const TamperLabTab: React.FC = () => {
                     });
                     setActiveTamperMode('MANUAL_EDIT');
                   }}
-                  className="input font-mono text-[11px]"
+                  className="input text-[11px]"
                 />
               </div>
               <div>
                 <label className="label" htmlFor="tl-merkle">
-                  RFC 6962 Merkle root
+                  Public log tree root
                 </label>
                 <input
                   id="tl-merkle"
@@ -236,7 +237,7 @@ export const TamperLabTab: React.FC = () => {
                     });
                     setActiveTamperMode('MANUAL_EDIT');
                   }}
-                  className="input font-mono text-[11px]"
+                  className="input text-[11px]"
                 />
               </div>
             </div>
@@ -247,53 +248,53 @@ export const TamperLabTab: React.FC = () => {
               disabled={isVerifying}
             >
               <ShieldAlert className="h-4 w-4" />
-              {isVerifying ? 'Verifying…' : 'Tamper & Run Verification'}
+              {isVerifying ? 'Examining…' : 'Tamper & Run Examination'}
             </Button>
           </Panel>
         </div>
 
-        {/* ── Before/after + verification verdict ────────────────────────── */}
+        {/* ── Before/after + verdict ──────────────────────────────────────── */}
         <div className="space-y-4 xl:col-span-7">
           <Panel
-            title="Before / after comparison"
-            meta={<FileDiff className="h-4 w-4 text-ink-400" />}
+            title="Original vs altered copy"
+            meta={<FileDiff className="h-4 w-4 text-ink-500" />}
             actions={
               tampered ? (
-                <StatusBadge tone="bad">Modified</StatusBadge>
+                <StatusBadge tone="bad">Contaminated</StatusBadge>
               ) : (
-                <StatusBadge tone="ok">Original</StatusBadge>
+                <StatusBadge tone="ok">Sealed original</StatusBadge>
               )
             }
           >
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-left text-xs">
                 <thead>
-                  <tr className="border-b border-line-700">
-                    <th className="pb-2 pr-3 font-mono text-[10px] font-medium uppercase tracking-wider text-ink-400">Field</th>
-                    <th className="pb-2 pr-3 font-mono text-[10px] font-medium uppercase tracking-wider text-ink-400">Original</th>
-                    <th className="pb-2 font-mono text-[10px] font-medium uppercase tracking-wider text-ink-400">Modified</th>
+                  <tr className="border-b border-rule-500">
+                    <th className="pb-2 pr-3 text-[10px] font-bold uppercase text-ink-600">Field</th>
+                    <th className="pb-2 pr-3 text-[10px] font-bold uppercase text-ink-600">Original</th>
+                    <th className="pb-2 text-[10px] font-bold uppercase text-ink-600">Altered copy</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-line-700/60">
+                <tbody className="divide-y divide-rule-400">
                   {comparisonRows.map((row) => {
                     const changed = row.original !== row.modified;
                     return (
                       <tr key={row.label}>
-                        <td className="py-2.5 pr-3 align-top font-mono text-[11px] text-ink-300">{row.label}</td>
+                        <td className="py-2.5 pr-3 align-top text-[11px] text-ink-700">{row.label}</td>
                         <td
-                          className={`max-w-[220px] py-2.5 pr-3 align-top font-mono text-[11px] ${
-                            changed ? 'text-ok-300' : 'text-ink-400'
+                          className={`max-w-[220px] py-2.5 pr-3 align-top text-[11px] ${
+                            changed ? 'text-notary-600' : 'text-ink-500'
                           }`}
                         >
                           {shortHash(row.original, 14, 8)}
                         </td>
                         <td
-                          className={`max-w-[220px] py-2.5 align-top font-mono text-[11px] ${
-                            changed ? 'font-semibold text-bad-300' : 'text-ink-400'
+                          className={`max-w-[220px] py-2.5 align-top text-[11px] ${
+                            changed ? 'font-bold text-stamp-600' : 'text-ink-500'
                           }`}
                         >
                           {shortHash(row.modified, 14, 8)}
-                          {changed && <span className="ml-1.5 text-[10px] uppercase tracking-wider">altered</span>}
+                          {changed && <span className="ml-1.5 text-[10px] font-bold uppercase">altered</span>}
                         </td>
                       </tr>
                     );
@@ -304,47 +305,47 @@ export const TamperLabTab: React.FC = () => {
           </Panel>
 
           {isVerifying ? (
-            <VerdictBanner verdict="pending" note="recomputing cryptographic checks offline" />
+            <VerdictStamp verdict="pending" note="recomputing cryptographic checks offline" />
           ) : (
-            <VerdictBanner
+            <VerdictStamp
               verdict={verificationResult.isUnforged ? 'authentic' : 'tampered'}
               receiptId={editedReceipt.decisionId}
-              note="verified with 0 vendor API calls"
+              note="verified offline, zero vendor API calls"
             />
           )}
 
           {!isVerifying && (
             <Panel
-              title="Verification result"
+              title="Examiner's findings"
               meta={`${verificationResult.tamperErrors.length} anomalies detected`}
             >
               <VerificationCheckList items={checksFromResult(verificationResult)} />
 
               {verificationResult.isUnforged ? (
-                <div className="mt-3 flex items-start gap-2 rounded-md border border-ok-900 bg-ok-950/50 p-3">
-                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-ok-400" />
-                  <p className="text-xs leading-relaxed text-ok-200/90">
-                    All cryptographic checks pass — this receipt matches its sealed commitments. Restore an unmodified
-                    record or apply a tamper scenario above to see detection in action.
+                <div className="mt-3 flex items-start gap-2 border border-notary-500 bg-notary-50 p-3" style={{ borderRadius: 2 }}>
+                  <p className="text-xs leading-relaxed text-notary-600">
+                    Every check reproduces exactly — this receipt matches its sealed state. Apply a tamper scenario
+                    above to watch detection work.
                   </p>
                 </div>
               ) : (
-                <div className="mt-3 flex items-start gap-2 rounded-md border border-bad-900 bg-bad-950/50 p-3">
-                  <XCircle className="mt-0.5 h-4 w-4 shrink-0 text-bad-400" />
-                  <p className="text-xs leading-relaxed text-bad-200/90">
-                    Fail-closed: at least one check failed, so the receipt cannot be trusted. The verdict is{' '}
-                    <span className="font-mono font-semibold">EVIDENCE TAMPERED</span>.
+                <div className="mt-3 flex items-start gap-2 border border-stamp-500 bg-stamp-50 p-3" style={{ borderRadius: 2 }}>
+                  <p className="text-xs leading-relaxed text-stamp-600">
+                    Fail closed: at least one check did not reproduce, so the receipt cannot be trusted. The verdict
+                    recorded on this examination is EVIDENCE TAMPERED.
                   </p>
                 </div>
               )}
 
               {verificationResult.tamperErrors.length > 0 && (
-                <div className="mt-3 space-y-1.5 border-t border-line-700/60 pt-3">
-                  <p className="font-mono text-[10px] uppercase tracking-wider text-ink-400">
-                    Verifier error trace
-                  </p>
+                <div className="mt-3 space-y-1.5 border-t border-rule-400 pt-3">
+                  <p className="text-[10px] font-bold uppercase text-ink-600">Examiner's error trace</p>
                   {verificationResult.tamperErrors.map((err, idx) => (
-                    <p key={idx} className="break-words rounded border border-bad-900/70 bg-bad-950/40 p-2 font-mono text-[11px] leading-relaxed text-bad-300">
+                    <p
+                      key={idx}
+                      className="break-words border border-stamp-500/70 bg-stamp-50 p-2 text-[11px] leading-relaxed text-stamp-600"
+                      style={{ borderRadius: 2 }}
+                    >
                       [{idx + 1}] {err}
                     </p>
                   ))}
