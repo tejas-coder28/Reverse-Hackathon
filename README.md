@@ -58,37 +58,22 @@ Without cryptographic evidence at the AI decision boundary, post-hoc audits cann
 
 ## 📸 Screenshots
 
-> **Note:** Add your screenshots to the `docs/screenshots/` directory and they will render below.
+**Live demo:** [reverse-hackathon.vercel.app](https://reverse-hackathon.vercel.app) — the fastest way to see the actual UI is to open it directly.
 
-### Overview Dashboard
-> System overview showing cryptographic infrastructure status, recent evidence ledger entries, and quick-access navigation.
+<!--
+  TODO: once docs/screenshots/*.png exist in this repo, restore the image embeds below.
+  Do not re-add ![...](docs/screenshots/...) links until those files are actually committed —
+  broken image links here render as visibly broken icons at the top of the README on GitHub.
+-->
 
-![Overview Dashboard](docs/screenshots/overview.png)
-
-### Decision Console
-> Interactive credit decision simulator — select a synthetic applicant, run the AI model, and watch the real-time CooL evidence pipeline animate through each cryptographic stage.
-
-![Decision Console](docs/screenshots/decision_console.png)
-
-### Evidence Receipt Inspector
-> Full cryptographic evidence receipt — inspect salted PII commitments, dual Ed25519 + ML-DSA-65 signatures, TEE attestation, Merkle proof, and run offline verification.
-
-![Evidence Receipt](docs/screenshots/evidence_receipt.png)
-
-### Verification Dashboard
-> Institutional audit ledger — browse all recorded evidence receipts, verify integrity at a glance, and drill down into individual proofs.
-
-![Verification Dashboard](docs/screenshots/verification_dashboard.png)
-
-### Tamper Lab
-> Interactive tamper demonstration — modify a receipt (flip decision, forge signature, alter Merkle root) and watch the 5-point cryptographic verification detect tampering in real time.
-
-![Tamper Lab](docs/screenshots/tamper_lab.png)
-
-### Tamper Detected
-> After tampering with evidence, the verification engine flags exactly which cryptographic checks failed — commitment mismatch, signature invalidation, or Merkle proof inconsistency.
-
-![Tamper Detected](docs/screenshots/tamper_detected.png)
+| Screen | What it shows |
+|--------|----------------|
+| **Overview Dashboard** | System overview showing cryptographic infrastructure status, recent evidence ledger entries, and quick-access navigation |
+| **Decision Console** | Interactive credit decision simulator — select a synthetic applicant, run the AI model, and watch the real-time CooL evidence pipeline animate through each cryptographic stage |
+| **Evidence Receipt Inspector** | Full cryptographic evidence receipt — salted PII commitments, dual Ed25519 + ML-DSA-65 signatures, TEE attestation, Merkle proof, and offline verification |
+| **Verification Dashboard** | Institutional audit ledger — browse all recorded evidence receipts, verify integrity at a glance, drill into individual proofs |
+| **Tamper Lab** | Interactive tamper demonstration — modify a receipt (flip decision, forge signature, alter Merkle root) and watch the 5-point verification detect it in real time |
+| **Tamper Detected** | After tampering, the verification engine flags exactly which check failed — commitment mismatch, signature invalidation, or Merkle proof inconsistency |
 
 ---
 
@@ -324,7 +309,7 @@ Reverse-Hackathon/
 ## 🚀 How to Run the Project
 
 ### Prerequisites
-- **Node.js** `18.x` or higher
+- **Node.js** `20.19+` or `22.12+` (required by Vite 8 — Node 18 will fail the install/build)
 - **npm** `9.x` or higher
 - **Git**
 
@@ -332,8 +317,8 @@ Reverse-Hackathon/
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/tejas-coder28/Reverse-Hackthon-.git
-cd Reverse-Hackthon-
+git clone https://github.com/aadi-learner77/Reverse-Hackathon.git
+cd Reverse-Hackathon
 
 # 2. Install dependencies
 npm install
@@ -375,16 +360,6 @@ VITE_FAIL_CLOSED_SECURITY=true
 # Generate fresh keys: npm run keys:generate
 # VITE_ED25519_SECRET_HEX=<64-char hex>
 # VITE_MLDSA_SEED_HEX=<64-char hex>
-```
-
-### Docker Deployment (Optional)
-
-```bash
-# Build Docker image
-docker build -t cool-ledger .
-
-# Run container
-docker run -p 5173:5173 -e VITE_COOL_DOMAIN=nbfc.credit_scoring cool-ledger
 ```
 
 ### Vercel Deployment
@@ -621,15 +596,17 @@ graph TD
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| Language | TypeScript | 6.0 |
-| Framework | React | 19 |
-| Build Tool | Vite | 8.3 |
-| Styling | Tailwind CSS | 4.3 |
-| Test Runner | Vitest | 5.0 |
-| Classical Crypto | `@noble/ed25519` | 3.2 |
-| Post-Quantum Crypto | `@noble/post-quantum` | 0.7 |
-| Hash Functions | `@noble/hashes` | 2.4 |
-| Icons | Lucide React | 1.45 |
+| Language | TypeScript | 6.0.2 |
+| Framework | React | 19.2.8 |
+| Build Tool | Vite | 8.3.0 |
+| Styling | Tailwind CSS | 4.3.3 |
+| Test Runner | Vitest | 5.0.0 |
+| Classical Crypto | `@noble/curves` (ed25519 module) | via `@noble/post-quantum`'s dependency tree |
+| Post-Quantum Crypto | `@noble/post-quantum` | 0.7.1 |
+| Hash Functions | `@noble/hashes` | 2.4.0 |
+| Icons | Lucide React | 1.45.0 |
+
+> **Dependency note:** `sign.ts` imports Ed25519 from `@noble/curves/ed25519.js`. `@noble/ed25519` is still listed in `package.json` but isn't imported anywhere in `src/` — either import it directly where it's declared, or drop it from `dependencies` and declare `@noble/curves` explicitly instead of relying on it resolving as a transitive dependency.
 
 ### Cryptographic Primitives
 - **Hash:** SHA-256 (FIPS 180-4)
