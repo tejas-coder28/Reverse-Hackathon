@@ -1,4 +1,4 @@
-<![CDATA[<div align="center">
+<div align="center">
 
 # 🛡️ CooL.ledger
 
@@ -714,4 +714,3 @@ We welcome contributions! Please:
 `SHA-256 · Ed25519 · ML-DSA-65 (FIPS 204) · Phala dstack TEE · RFC 6962`
 
 </div>
-]]>
