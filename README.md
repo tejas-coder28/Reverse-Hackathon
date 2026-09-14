@@ -1,6 +1,41 @@
-# 🛡️ CooL.ledger — AI Decision Evidence & Audit Platform
+<![CDATA[<div align="center">
 
-**AI systems make consequential decisions, but ordinary logs are editable. CooL.ledger creates cryptographically verifiable evidence for offline audit of AI decisions with zero vendor dependencies.**
+# 🛡️ CooL.ledger
+
+### AI Decision Evidence & Audit Platform
+
+**AI systems make consequential decisions, but ordinary logs are editable.**  
+**CooL.ledger creates cryptographically verifiable evidence for offline audit of AI decisions with zero vendor dependencies.**
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE.md)
+[![TypeScript](https://img.shields.io/badge/TypeScript-6.0-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-8.3-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Vitest](https://img.shields.io/badge/Tests-9%2F9%20Passing-brightgreen?logo=vitest)](./tests/cool.test.ts)
+[![Ed25519](https://img.shields.io/badge/Ed25519-RFC%208032-orange)](https://tools.ietf.org/html/rfc8032)
+[![ML--DSA--65](https://img.shields.io/badge/ML--DSA--65-FIPS%20204-red)](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.204.pdf)
+[![Phala TEE](https://img.shields.io/badge/Phala-TEE%20Attestation-purple)](https://docs.phala.network)
+
+</div>
+
+---
+
+## 📑 Table of Contents
+
+- [The Problem We're Solving](#-the-problem-were-solving)
+- [Screenshots](#-screenshots)
+- [What We Built](#️-what-we-built)
+- [How CooL SDK is Architected & Used](#-how-cool-sdk-is-architected--used)
+- [Why CooL is Important](#-why-cool-is-important-to-our-solution)
+- [Project Structure](#-project-structure)
+- [How to Run the Project](#-how-to-run-the-project)
+- [Architecture & Workflow](#️-architecture--workflow)
+- [Technical Decisions](#-important-technical-decisions)
+- [Technical Details](#️-technical-details)
+- [Limitations & Future Improvements](#-limitations--future-improvements)
+- [References & Resources](#-references--resources)
+- [Contributing](#-contributing)
+- [License](#-license)
 
 ---
 
@@ -21,6 +56,42 @@ Without cryptographic evidence at the AI decision boundary, post-hoc audits cann
 
 ---
 
+## 📸 Screenshots
+
+> **Note:** Add your screenshots to the `docs/screenshots/` directory and they will render below.
+
+### Overview Dashboard
+> System overview showing cryptographic infrastructure status, recent evidence ledger entries, and quick-access navigation.
+
+![Overview Dashboard](docs/screenshots/overview.png)
+
+### Decision Console
+> Interactive credit decision simulator — select a synthetic applicant, run the AI model, and watch the real-time CooL evidence pipeline animate through each cryptographic stage.
+
+![Decision Console](docs/screenshots/decision_console.png)
+
+### Evidence Receipt Inspector
+> Full cryptographic evidence receipt — inspect salted PII commitments, dual Ed25519 + ML-DSA-65 signatures, TEE attestation, Merkle proof, and run offline verification.
+
+![Evidence Receipt](docs/screenshots/evidence_receipt.png)
+
+### Verification Dashboard
+> Institutional audit ledger — browse all recorded evidence receipts, verify integrity at a glance, and drill down into individual proofs.
+
+![Verification Dashboard](docs/screenshots/verification_dashboard.png)
+
+### Tamper Lab
+> Interactive tamper demonstration — modify a receipt (flip decision, forge signature, alter Merkle root) and watch the 5-point cryptographic verification detect tampering in real time.
+
+![Tamper Lab](docs/screenshots/tamper_lab.png)
+
+### Tamper Detected
+> After tampering with evidence, the verification engine flags exactly which cryptographic checks failed — commitment mismatch, signature invalidation, or Merkle proof inconsistency.
+
+![Tamper Detected](docs/screenshots/tamper_detected.png)
+
+---
+
 ## 🏗️ What We Built
 
 **CooL.ledger** is a full-stack AI audit platform that:
@@ -32,12 +103,15 @@ Without cryptographic evidence at the AI decision boundary, post-hoc audits cann
 5. **Appends to RFC 6962 transparency logs** for append-only, externally-auditable proof
 6. **Enables offline verification** of evidence integrity without any external API calls
 
-**Core Components:**
-- **Web UI Dashboard** (`src/components/`) — Interactive evidence explorer with tamper demonstration lab
-- **CooL Evidence Core** (`src/evidence/`) — Cryptographic evidence generation & verification
-- **AI Credit Model** (`src/model/creditModel.ts`) — Autonomous decision boundary producing credit decisions
-- **Evidence Service** (`src/services/evidenceService.ts`) — Persistent receipt storage and retrieval
-- **Verification Engine** (`src/evidence/verify.ts`) — Offline 5-point cryptographic validation
+### Core Components
+
+| Component | Location | Description |
+|-----------|----------|-------------|
+| **Web UI Dashboard** | `src/components/` | Interactive evidence explorer with tamper demonstration lab |
+| **CooL Evidence Core** | `src/evidence/` | Cryptographic evidence generation & verification |
+| **AI Credit Model** | `src/model/creditModel.ts` | Autonomous decision boundary producing credit decisions |
+| **Evidence Service** | `src/services/evidenceService.ts` | Persistent receipt storage and retrieval |
+| **Verification Engine** | `src/evidence/verify.ts` | Offline 5-point cryptographic validation |
 
 ---
 
@@ -47,7 +121,7 @@ Without cryptographic evidence at the AI decision boundary, post-hoc audits cann
 
 The CooL SDK is executed **at the exact moment of consequential AI decision**:
 
-### **1. `cool.record()` — Cryptographic Evidence Generation**
+### 1. `cool.record()` — Cryptographic Evidence Generation
 ```typescript
 // src/evidence/client.ts
 const receipt = await cool.record({
@@ -64,7 +138,7 @@ Records:
 - TEE enclave quotes from Phala dstack
 - RFC 6962 transparency log entry
 
-### **2. `createSaltedCommitment()` — PII-Safe State Sealing**
+### 2. `createSaltedCommitment()` — PII-Safe State Sealing
 ```typescript
 // src/evidence/hash.ts
 const commitment = await createSaltedCommitment(
@@ -76,7 +150,7 @@ const commitment = await createSaltedCommitment(
 // ✓ Proves what was decided without exposing PII
 ```
 
-### **3. `createHybridSignatures()` — Dual-Strength Signatures**
+### 3. `createHybridSignatures()` — Dual-Strength Signatures
 ```typescript
 // src/evidence/sign.ts
 const signatures = await createHybridSignatures(commitment.combinedStateHash);
@@ -84,7 +158,7 @@ const signatures = await createHybridSignatures(commitment.combinedStateHash);
 // ML-DSA-65: Post-quantum resistant FIPS 204 (via @noble/post-quantum)
 ```
 
-### **4. `createTEEAttestation()` — Hardware-Rooted Trust**
+### 4. `createTEEAttestation()` — Hardware-Rooted Trust
 ```typescript
 // src/evidence/phala/dstack.ts
 const teeQuote = await createTEEAttestation(
@@ -94,7 +168,7 @@ const teeQuote = await createTEEAttestation(
 // SHA-256 integrity binding to mrEnclave/mrSigner measurements
 ```
 
-### **5. `appendToTransparencyLog()` — Append-Only Audit Trail**
+### 5. `appendToTransparencyLog()` — Append-Only Audit Trail
 ```typescript
 // src/evidence/phala/log.ts
 const merkleProof = await appendToTransparencyLog(commitment.combinedStateHash);
@@ -102,7 +176,7 @@ const merkleProof = await appendToTransparencyLog(commitment.combinedStateHash);
 // ✓ Auditable without any API access
 ```
 
-### **6. `verifyReceipt()` — Offline Verification**
+### 6. `verifyReceipt()` — Offline Verification
 ```typescript
 // src/evidence/verify.ts
 const verification = await verifyReceipt(receipt);
@@ -145,17 +219,13 @@ Reverse-Hackathon/
 ├── 📄 ARCHITECTURE.md                    # Detailed system architecture
 ├── 📄 DEMO.md                            # Demonstration guide
 ├── 📄 SECURITY.md                        # Security considerations
+├── 📄 CHANGELOG.md                       # Version history
 ├── 📄 LICENSE.md                         # MIT License
 ├── 📄 package.json                       # Node.js dependencies & scripts
-├── 📄 package-lock.json                  # Dependency lock file
 ├── 📄 vite.config.ts                     # Vite build configuration
 ├── 📄 vercel.json                        # Vercel deployment config
 ├── 📄 tsconfig.json                      # TypeScript base config
-├── 📄 tsconfig.app.json                  # TypeScript app config
-├── 📄 tsconfig.node.json                 # TypeScript Node config
 ├── 📄 .env.example                       # Environment variables template
-├── 📄 .gitignore                         # Git ignore rules
-├── 📄 .oxlintrc.json                     # Oxlint configuration
 ├── 📄 index.html                         # Entry HTML file
 │
 ├── 📂 src/                               # Main application source code
@@ -165,7 +235,7 @@ Reverse-Hackathon/
 │   ├── 📄 index.css                      # Global styles
 │   │
 │   ├── 📂 components/                    # React UI components
-│   │   ├── 📄 Header.tsx                 # App header with branding
+│   │   ├── 📄 Header.tsx                 # App header with branding & navigation
 │   │   ├── 📄 OverviewTab.tsx            # System overview dashboard
 │   │   ├── 📄 SimulatorTab.tsx           # Credit decision simulator
 │   │   ├── 📄 EvidenceReceiptTab.tsx     # Evidence receipt inspector
@@ -182,7 +252,6 @@ Reverse-Hackathon/
 │   │   ├── 📄 sign.ts                    # Ed25519 + ML-DSA-65 hybrid signatures
 │   │   ├── 📄 verify.ts                  # 5-point offline verification engine
 │   │   ├── 📄 types.ts                   # TypeScript cryptographic types
-│   │   │
 │   │   └── 📂 phala/                     # Phala Network TEE integration
 │   │       ├── 📄 dstack.ts              # TEE attestation (dstack quotes)
 │   │       └── 📄 log.ts                 # RFC 6962 transparency log management
@@ -199,69 +268,87 @@ Reverse-Hackathon/
 │   └── 📄 cool.test.ts                   # CooL cryptographic & integration tests (9 tests)
 │
 ├── 📂 docs/                              # Additional documentation
+│   └── 📂 screenshots/                   # Application screenshots
+│
+├── 📂 scripts/                           # Utility scripts
+│   └── 📄 generate-keys.ts              # Cryptographic key generation utility
 │
 └── 📂 public/                            # Public static files
+    ├── 📄 favicon.svg                    # Application favicon
+    └── 📄 icons.svg                      # Icon sprite sheet
 ```
 
-### **Directory Descriptions**
+### Directory Descriptions
 
-#### **`src/evidence/` — Cryptographic Evidence Core**
-- **adapter.ts**: CooL service adapter. Orchestrates the entire evidence generation flow with fail-closed error handling.
-- **client.ts**: `CooLClient` class with `record()` entry point that composes hash → sign → TEE → log pipeline.
-- **hash.ts**: Salted SHA-256 hashing via `@noble/hashes` to create PII-safe commitments.
-- **sign.ts**: Real Ed25519 (`@noble/curves`) + ML-DSA-65 (`@noble/post-quantum`) hybrid signatures with environment key overrides.
-- **verify.ts**: 5-point offline verification engine (hash, Ed25519, ML-DSA-65, TEE, Merkle).
-- **types.ts**: TypeScript interfaces for cryptographic primitives and receipts.
-- **phala/dstack.ts**: TEE attestation with SHA-256 integrity binding to mrEnclave/mrSigner measurements.
-- **phala/log.ts**: RFC 6962 Merkle transparency log with append, inclusion proof generation, and verification.
+#### `src/evidence/` — Cryptographic Evidence Core
+| File | Purpose |
+|------|---------|
+| `adapter.ts` | CooL service adapter — orchestrates the full evidence generation flow with fail-closed error handling |
+| `client.ts` | `CooLClient` class with `record()` entry point that composes the hash → sign → TEE → log pipeline |
+| `hash.ts` | Salted SHA-256 hashing via `@noble/hashes` to create PII-safe commitments |
+| `sign.ts` | Real Ed25519 (`@noble/curves`) + ML-DSA-65 (`@noble/post-quantum`) hybrid signatures with env key overrides |
+| `verify.ts` | 5-point offline verification engine (hash, Ed25519, ML-DSA-65, TEE, Merkle) |
+| `types.ts` | TypeScript interfaces for cryptographic primitives and receipts |
+| `phala/dstack.ts` | TEE attestation with SHA-256 integrity binding to mrEnclave/mrSigner measurements |
+| `phala/log.ts` | RFC 6962 Merkle transparency log with append, inclusion proof generation, and verification |
 
-#### **`src/components/` — User Interface**
-- **Header.tsx**: Application header with branding.
-- **OverviewTab.tsx**: System overview with cryptographic infrastructure status.
-- **SimulatorTab.tsx**: Interactive credit decision simulator.
-- **EvidenceReceiptTab.tsx**: Receipt inspector showing all cryptographic fields.
-- **AuditDashboardTab.tsx**: Institutional audit ledger.
-- **TamperLabTab.tsx**: Interactive tamper demonstration (modify receipts, see verification fail).
-- **ReceiptInspectorModal.tsx**: Detailed receipt modal.
-- **DisclaimerBanner.tsx**: Legal disclaimer banner.
+#### `src/components/` — User Interface
+| File | Purpose |
+|------|---------|
+| `Header.tsx` | Application header with branding and tab navigation |
+| `OverviewTab.tsx` | System overview with cryptographic infrastructure status |
+| `SimulatorTab.tsx` | Interactive credit decision simulator with real-time pipeline animation |
+| `EvidenceReceiptTab.tsx` | Receipt inspector showing all cryptographic fields |
+| `AuditDashboardTab.tsx` | Institutional audit ledger |
+| `TamperLabTab.tsx` | Interactive tamper demonstration (modify receipts, see verification fail) |
+| `ReceiptInspectorModal.tsx` | Detailed receipt modal |
+| `DisclaimerBanner.tsx` | Legal disclaimer banner |
 
-#### **`src/model/` — AI Decision Model**
-- **creditModel.ts**: Deterministic credit risk scoring logic with 3 preset synthetic applicants.
+#### `src/model/` — AI Decision Model
+| File | Purpose |
+|------|---------|
+| `creditModel.ts` | Deterministic credit risk scoring with 3 preset synthetic applicants |
 
-#### **`src/services/` — Application Services**
-- **evidenceService.ts**: Persists cryptographic receipts to browser localStorage with CooL adapter integration.
+#### `src/services/` — Application Services
+| File | Purpose |
+|------|---------|
+| `evidenceService.ts` | Persists cryptographic receipts to browser localStorage with CooL adapter integration |
 
-#### **`tests/` — Test Suite**
-- **cool.test.ts**: 9 integration tests covering recording, persistence, verification, tampering, fail-closed handling, PII safety, and environment key overrides.
+#### `tests/` — Test Suite
+| File | Purpose |
+|------|---------|
+| `cool.test.ts` | 9 integration tests covering recording, persistence, verification, tampering, fail-closed handling, PII safety, and env key overrides |
 
 ---
 
 ## 🚀 How to Run the Project
 
-### **Prerequisites**
+### Prerequisites
 - **Node.js** `18.x` or higher
 - **npm** `9.x` or higher
 - **Git**
 
-### **Linux / macOS Installation**
+### Quick Start
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/aadi-learner77/Reverse-Hackathon.git
-cd Reverse-Hackathon
+git clone https://github.com/tejas-coder28/Reverse-Hackthon-.git
+cd Reverse-Hackthon-
 
 # 2. Install dependencies
 npm install
 
 # 3. Create environment file
-cp .env.example .env.local
+cp .env.example .env.local   # Linux / macOS
+# Copy-Item .env.example .env.local   # Windows PowerShell
 
 # 4. Run development server
 npm run dev
-# Server runs on http://localhost:5173
+# → Server runs on http://localhost:5173
 
-# 5. Run tests (in another terminal)
+# 5. Run tests
 npx vitest run
+# → 9/9 tests pass
 
 # 6. Build for production
 npm run build
@@ -270,57 +357,7 @@ npm run build
 npm run preview
 ```
 
-### **Windows Installation**
-
-```powershell
-# 1. Clone the repository
-git clone https://github.com/aadi-learner77/Reverse-Hackathon.git
-cd Reverse-Hackathon
-
-# 2. Install dependencies
-npm install
-
-# 3. Create environment file
-Copy-Item .env.example .env.local
-
-# 4. Run development server
-npm run dev
-# Server runs on http://localhost:5173
-
-# 5. Run tests (in another terminal)
-npx vitest run
-
-# 6. Build for production
-npm run build
-
-# 7. Preview production build
-npm run preview
-```
-
-### **Docker Deployment (Optional)**
-
-```bash
-# Build Docker image
-docker build -t cool-ledger .
-
-# Run container
-docker run -p 5173:5173 -e VITE_COOL_DOMAIN=nbfc.credit_scoring cool-ledger
-```
-
-### **Vercel Deployment**
-
-```bash
-# Deploy to Vercel
-npx vercel
-
-# Set environment variables in Vercel dashboard
-# VITE_COOL_DOMAIN=nbfc.credit_scoring
-# VITE_ENABLE_TEE_ATTESTATION=true
-# VITE_MODEL_ID=CreditRisk-v3
-# VITE_MODEL_VERSION=3.4.1-prod
-```
-
-### **Environment Variables** (`.env.local`)
+### Environment Variables (`.env.local`)
 
 ```bash
 # CooL SDK Configuration
@@ -331,16 +368,53 @@ VITE_ENABLE_TEE_ATTESTATION=true
 VITE_MODEL_ID=CreditRisk-v3
 VITE_MODEL_VERSION=3.4.1-prod
 
-# Optional: Phala Network Configuration
-VITE_PHALA_ENDPOINT=https://api.phala.network
-VITE_PHALA_CONTRACT_ADDRESS=0x...
+# Fail-Closed Security (default: true)
+VITE_FAIL_CLOSED_SECURITY=true
+
+# Optional: Custom Cryptographic Keys
+# Generate fresh keys: npm run keys:generate
+# VITE_ED25519_SECRET_HEX=<64-char hex>
+# VITE_MLDSA_SEED_HEX=<64-char hex>
 ```
+
+### Docker Deployment (Optional)
+
+```bash
+# Build Docker image
+docker build -t cool-ledger .
+
+# Run container
+docker run -p 5173:5173 -e VITE_COOL_DOMAIN=nbfc.credit_scoring cool-ledger
+```
+
+### Vercel Deployment
+
+```bash
+# Deploy to Vercel
+npx vercel
+
+# Set environment variables in Vercel dashboard:
+# VITE_COOL_DOMAIN=nbfc.credit_scoring
+# VITE_ENABLE_TEE_ATTESTATION=true
+# VITE_MODEL_ID=CreditRisk-v3
+# VITE_MODEL_VERSION=3.4.1-prod
+```
+
+### NPM Scripts
+
+| Script | Command | Description |
+|--------|---------|-------------|
+| `dev` | `npm run dev` | Start Vite dev server with HMR |
+| `build` | `npm run build` | TypeScript compile + production bundle |
+| `test` | `npm test` | Run Vitest test suite (9 tests) |
+| `preview` | `npm run preview` | Preview production build locally |
+| `keys:generate` | `npm run keys:generate` | Generate fresh Ed25519 + ML-DSA-65 keypairs |
 
 ---
 
 ## 🏗️ Architecture & Workflow
 
-### **System Flow Diagram**
+### System Flow Diagram
 
 ```
 ┌─────────────────────┐
@@ -394,7 +468,7 @@ VITE_PHALA_CONTRACT_ADDRESS=0x...
     └──────────────┘ └────────────────┘ └──────────────┘
 ```
 
-### **Mermaid Flowchart**
+### Mermaid Flowchart
 
 ```mermaid
 graph TD
@@ -417,7 +491,7 @@ graph TD
     P --> R[Compliance Alert]
 ```
 
-### **Key Integration Points**
+### Key Integration Points
 
 | Component | File | Purpose |
 |-----------|------|---------|
@@ -437,7 +511,7 @@ graph TD
 
 ## 🔧 Important Technical Decisions
 
-### **1. Salted SHA-256 for PII Commitment** ✓
+### 1. Salted SHA-256 for PII Commitment ✓
 **Decision:** Use `H(SALT : input || output)` instead of storing raw applicant data.
 
 **Why:**
@@ -452,7 +526,7 @@ graph TD
 
 ---
 
-### **2. Hybrid Ed25519 + ML-DSA-65 Signatures** ✓
+### 2. Hybrid Ed25519 + ML-DSA-65 Signatures ✓
 **Decision:** Use dual classical and post-quantum signatures instead of single algorithm.
 
 **Why:**
@@ -467,7 +541,7 @@ graph TD
 
 ---
 
-### **3. Phala Network dstack for TEE Attestation** ✓
+### 3. Phala Network dstack for TEE Attestation ✓
 **Decision:** Use Phala dstack hardware quotes instead of browser Web Crypto API alone.
 
 **Why:**
@@ -482,7 +556,7 @@ graph TD
 
 ---
 
-### **4. RFC 6962 Transparency Logs for Append-Only Audit Trail** ✓
+### 4. RFC 6962 Transparency Logs for Append-Only Audit Trail ✓
 **Decision:** Use Merkle tree inclusion proofs (Certificate Transparency spec) instead of simple sequential logs.
 
 **Why:**
@@ -497,7 +571,7 @@ graph TD
 
 ---
 
-### **5. TypeScript + Vite for Frontend** ✓
+### 5. TypeScript + Vite for Frontend ✓
 **Decision:** Use TypeScript + Vite instead of JavaScript + Webpack.
 
 **Why:**
@@ -512,7 +586,7 @@ graph TD
 
 ---
 
-### **6. Vitest for Cryptographic Unit Tests** ✓
+### 6. Vitest for Cryptographic Unit Tests ✓
 **Decision:** Use Vitest (Vite-native test runner) instead of Jest.
 
 **Why:**
@@ -526,7 +600,7 @@ graph TD
 
 ---
 
-### **7. Key Management (Demo vs Production)** ✓
+### 7. Key Management (Demo vs Production) ✓
 **Decision:** The shipped demo defaults to deterministic institutional keypairs for offline reproducibility, backed by configurable environment variable overrides (`VITE_ED25519_SECRET_HEX`, `VITE_MLDSA_SEED_HEX`) and a dedicated key generation utility (`npm run keys:generate`).
 
 **Why (Hackathon & Grading Evaluation):**
@@ -543,13 +617,27 @@ graph TD
 
 ## ⚙️ Technical Details
 
-### **Cryptographic Primitives**
+### Tech Stack
+
+| Category | Technology | Version |
+|----------|-----------|---------|
+| Language | TypeScript | 6.0 |
+| Framework | React | 19 |
+| Build Tool | Vite | 8.3 |
+| Styling | Tailwind CSS | 4.3 |
+| Test Runner | Vitest | 5.0 |
+| Classical Crypto | `@noble/ed25519` | 3.2 |
+| Post-Quantum Crypto | `@noble/post-quantum` | 0.7 |
+| Hash Functions | `@noble/hashes` | 2.4 |
+| Icons | Lucide React | 1.45 |
+
+### Cryptographic Primitives
 - **Hash:** SHA-256 (FIPS 180-4)
 - **Classical Signature:** Ed25519 (RFC 8032)
 - **Post-Quantum Signature:** ML-DSA-65 a.k.a. Dilithium (FIPS 204)
 - **Random Generation:** `crypto.getRandomValues()` (Web Crypto API)
 
-### **Verification Checklist (5 Points)**
+### Verification Checklist (5 Points)
 1. ✓ Commitment hash is correctly computed
 2. ✓ Ed25519 signature verifies
 3. ✓ ML-DSA-65 signature verifies
@@ -560,41 +648,44 @@ All 5 checks must pass for evidence to be deemed authentic. Any failure returns 
 
 ---
 
+## 🎬 Demo Walkthrough
+
+Follow these steps to experience the full CooL.ledger workflow:
+
+| Step | Action | What Happens |
+|------|--------|-------------|
+| **1** | Open **Decision Console** tab | Select a synthetic applicant (e.g. #8842) |
+| **2** | Click **RUN AI DECISION** | AI model evaluates credit risk and produces APPROVED/REJECTED/MANUAL_REVIEW |
+| **3** | Observe CooL evidence pipeline | Watch real-time animation: `AI Decision → CooL Boundary → Commitment → Hybrid Signatures → Receipt Sealed` |
+| **4** | Open **Evidence** tab | Inspect the full cryptographic receipt — salted PII hashes, dual signatures, TEE attestation, Merkle proof |
+| **5** | Click **VERIFY EVIDENCE** | Runs 5-point offline verification → `CRYPTOGRAPHIC EVIDENCE: ✓ VALID` |
+| **6** | Open **Tamper Lab** tab | Click **TAMPER WITH EVIDENCE** to flip the decision or forge a signature |
+| **7** | Observe tamper detection | `EVIDENCE TAMPERED` — verification fails with specific check failures |
+| **8** | Click **Restore Original** | Receipt restored and re-verified → `ORIGINAL: ✓ VERIFIED` |
+
+### Synthetic Applicant Profiles
+
+| Applicant | Income | Credit Score | Debt | Expected Decision |
+|-----------|--------|-------------|------|-------------------|
+| Sarah Chen (#8842) | $145,000 | 785 | $12,000 | ✅ APPROVED |
+| Marcus Vance (#8843) | $58,000 | 635 | $28,000 | ⚠️ MANUAL_REVIEW |
+| Elena Rostova (#8844) | $28,000 | 512 | $34,000 | ❌ REJECTED |
+
+---
+
 ## 📋 Limitations & Future Improvements
 
-### **Current Limitations**
+### Current Limitations
 
-#### **Browser TEE (Local Demo Mode)**
-- **Limitation:** Browser environment cannot execute true SGX/TDX enclave code.
-- **Current:** Phala dstack quotes run in local-demo mode with real SHA-256 integrity binding to mrEnclave/mrSigner measurements.
-- **Impact:** Crypto operations are real; hardware isolation requires a remote-enclave deployment.
-- **Future:** Deploy backend TEE enclave on actual Phala Network for production audit.
+| Limitation | Description | Impact | Future Solution |
+|------------|-------------|--------|-----------------|
+| **Browser TEE** | Browser cannot execute true SGX/TDX enclave code | Crypto ops are real; hardware isolation requires remote deployment | Deploy backend TEE on Phala Network |
+| **PII Reversibility** | Salted commitments cannot be reverse-engineered | Audit requires applicant consent for dispute resolution | Zero-knowledge proof protocol |
+| **Model Fairness** | CooL proves **record integrity**, not **model fairness** | Auditors must independently validate model behavior | Integrate fairness metrics & bias detection |
+| **Single-Threaded** | Verification runs synchronously | Suitable for < 1000 receipts/audit session | Worker pool for parallel verification |
+| **Public Evidence** | No field-level encryption | May expose proprietary model logic | Confidential compute zones |
 
-#### **PII Commitment Reversibility**
-- **Limitation:** Salted commitments cannot be reverse-engineered; audit requires applicant consent.
-- **Current:** Applicants must provide salt during dispute resolution.
-- **Impact:** Adds friction to audit workflows requiring input inspection.
-- **Future:** Implement zero-knowledge proof protocol to prove applicant attributes without full data disclosure.
-
-#### **Model Fairness Not Proven**
-- **Limitation:** CooL proves **record integrity**, not **model fairness, accuracy, or bias-free execution**.
-- **Current:** Evidence shows a decision was made, not whether it was fair.
-- **Impact:** Auditors must independently validate model behavior.
-- **Future:** Integrate fairness metrics & bias detection into evidence generation.
-
-#### **Single-Threaded Verification**
-- **Limitation:** Verification runs synchronously; large batches slow down.
-- **Current:** Suitable for < 1000 receipts/audit session.
-- **Impact:** Batch audits of millions of decisions require parallelization.
-- **Future:** Worker pool verification for parallel cryptographic checks.
-
-#### **No Private/Confidential Evidence**
-- **Limitation:** All evidence is public and readable by any auditor.
-- **Current:** No field-level encryption for sensitive decision rationale.
-- **Impact:** May expose proprietary model logic.
-- **Future:** Add confidential compute zones for decision evidence encryption.
-
-### **Planned Future Enhancements**
+### Planned Future Enhancements
 
 | Priority | Feature | Target Timeline |
 |----------|---------|-----------------|
@@ -616,12 +707,15 @@ All 5 checks must pass for evidence to be deemed authentic. Any failure returns 
 - **RFC 8032:** Elliptic Curve Digital Signature Algorithm (Ed25519) — https://tools.ietf.org/html/rfc8032
 - **Phala Network dstack:** TEE Attestation — https://docs.phala.network
 - **Web Crypto API:** MDN Documentation — https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API
+- **EU AI Act Article 12:** Record-keeping requirements for high-risk AI systems
+- **California AB 316:** AI accountability and audit requirements
+- **RBI FREE-AI Assurance:** India NBFC AI audit trail mandates
 
 ---
 
 ## 📄 License
 
-MIT License — See [LICENSE](./LICENSE) file for details.
+MIT License — See [LICENSE.md](./LICENSE.md) for details.
 
 ---
 
@@ -636,4 +730,11 @@ We welcome contributions! Please:
 
 ---
 
+<div align="center">
+
 **Built for the Reverse Hackathon | Team Beta Onepiece**
+
+`SHA-256 · Ed25519 · ML-DSA-65 (FIPS 204) · Phala dstack TEE · RFC 6962`
+
+</div>
+]]>
