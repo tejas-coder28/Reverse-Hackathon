@@ -23,7 +23,7 @@
 ## 📑 Table of Contents
 
 - [The Problem We're Solving](#-the-problem-were-solving)
-- [Screenshots](#-screenshots)
+- [Visual Tour & Screenshots](#-visual-tour--screenshots)
 - [What We Built](#️-what-we-built)
 - [How CooL SDK is Architected & Used](#-how-cool-sdk-is-architected--used)
 - [Why CooL is Important](#-why-cool-is-important-to-our-solution)
@@ -56,24 +56,102 @@ Without cryptographic evidence at the AI decision boundary, post-hoc audits cann
 
 ---
 
-## 📸 Screenshots
+## 📸 Visual Tour & Screenshots
 
-**Live demo:** [reverse-hackathon.vercel.app](https://reverse-hackathon.vercel.app) — the fastest way to see the actual UI is to open it directly.
+**Live demo:** [reverse-hackathon.vercel.app](https://reverse-hackathon.vercel.app) — explore the live interactive application directly.
 
-<!--
-  TODO: once docs/screenshots/*.png exist in this repo, restore the image embeds below.
-  Do not re-add ![...](docs/screenshots/...) links until those files are actually committed —
-  broken image links here render as visibly broken icons at the top of the README on GitHub.
--->
+Explore every screen, workflow, cryptographic proof view, attack simulation, and mobile layout of the **CooL.ledger** platform:
 
-| Screen | What it shows |
-|--------|----------------|
-| **Overview Dashboard** | System overview showing cryptographic infrastructure status, recent evidence ledger entries, and quick-access navigation |
-| **Decision Console** | Interactive credit decision simulator — select a synthetic applicant, run the AI model, and watch the real-time CooL evidence pipeline animate through each cryptographic stage |
-| **Evidence Receipt Inspector** | Full cryptographic evidence receipt — salted PII commitments, dual Ed25519 + ML-DSA-65 signatures, TEE attestation, Merkle proof, and offline verification |
-| **Verification Dashboard** | Institutional audit ledger — browse all recorded evidence receipts, verify integrity at a glance, drill into individual proofs |
-| **Tamper Lab** | Interactive tamper demonstration — modify a receipt (flip decision, forge signature, alter Merkle root) and watch the 5-point verification detect it in real time |
-| **Tamper Detected** | After tampering, the verification engine flags exactly which check failed — commitment mismatch, signature invalidation, or Merkle proof inconsistency |
+```
+┌──────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   PLATFORM SCREENSHOT DIRECTORY                                  │
+├───────────────────────────────┬──────────────────────────────────┬───────────────────────────────┤
+│ 1. Core Dashboards            │ 2. Cryptographic Proof Exhibits  │ 3. Forensic Tamper Lab        │
+│   • Case Overview             │   • Dual Signatures (Ed25519/PQC)│   • Pristine Baseline         │
+│   • Decision Console (Approve)│   • Phala TEE & Merkle Tree      │   • Decision Flipped Attack   │
+│   • Decision Console (Deny)   │   • Canonical JSON Inspector     │   • Signature Forgery Attack  │
+│   • Audit Docket Ledger       │                                  │   • Merkle Log Tamper Attack  │
+├───────────────────────────────┴──────────────────────────────────┴───────────────────────────────┤
+│ 4. Mobile & Responsive Layouts                                                                   │
+│   • Mobile Overview · Mobile Decision Pipeline · Mobile Evidence Receipt                         │
+└──────────────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+---
+
+### 1. Core Dashboards & Decision Boundary
+
+#### 🏛️ Case Overview & Trust Infrastructure
+> Complete institutional overview showcasing active cryptographic key registry (Ed25519, NIST FIPS 204 ML-DSA-65, Phala dstack TEE), key metrics, and current case file docket entries.
+
+![Case Overview Dashboard](docs/screenshots/01_case_overview.png)
+
+#### ⚡ Decision Console — Autonomous AI Underwriting (Approved)
+> Real-time credit decision simulator on synthetic applicant Sarah Chen (#8842). The live 5-stage CooL evidence pipeline seals state: **Model decides** → **Salted SHA-256 seal** → **Ed25519 signature** → **ML-DSA-65 quantum countersignature** → **Receipt issued & logged**.
+
+![Decision Console - Approved Workflow](docs/screenshots/02_decision_console_approved.png)
+
+#### 🛑 Decision Console — Adverse Action & Denial Flow (Rejected)
+> Credit evaluation of Elena Rostova (#8844) resulting in autonomous rejection. Sealed evidence captures adverse action reasons (*Credit score below threshold*, *Excessive DTI ratio*) and generates non-repudiable audit trails.
+
+![Decision Console - Adverse Action Denial](docs/screenshots/03_decision_console_denied.png)
+
+#### 📜 Institutional Audit Docket & Multi-Case Ledger
+> Searchable and filterable institutional ledger of all recorded evidence receipts. Reviewers can filter by status (*All*, *Verified*, *Tampered*), verify batch integrity, and copy cryptographic decision IDs.
+
+![Audit Docket Ledger](docs/screenshots/07_audit_docket_ledger.png)
+
+---
+
+### 2. Cryptographic Evidence Exhibits & Proofs
+
+#### 🔐 Exhibit A — Salted PII Commitments & Dual Signatures
+> The cryptographic evidence receipt. Raw applicant PII is never stored — only salted SHA-256 commitments. Includes classical **Ed25519** signature and post-quantum **ML-DSA-65 (FIPS 204)** countersignature.
+
+![Evidence Receipt - Privacy Commitments and Dual Signatures](docs/screenshots/04_evidence_receipt_signatures.png)
+
+#### 🛡️ Exhibit A — Phala dstack TEE Attestation & RFC 6962 Merkle Audit Path
+> Hardware-rooted trust via Phala Network Trusted Execution Environment attestation measurement and cryptographic RFC 6962 transparency log inclusion proof.
+
+![Evidence Receipt - TEE Attestation and Merkle Proof](docs/screenshots/05_evidence_receipt_tee_merkle.png)
+
+#### 📋 Raw Canonical JSON Exhibit Inspector
+> High-contrast modal inspector presenting the canonical JSON exhibit format. Ready for one-click clipboard copying and ingestion by offline command-line verifiers (`cool verify`).
+
+![Raw Canonical JSON Exhibit Inspector Modal](docs/screenshots/06_raw_json_inspector.png)
+
+---
+
+### 3. Forensic Tamper Lab (Attack Simulation & Live Detection)
+
+#### 🟢 Pristine Baseline — Unaltered Evidence (5/5 Checks Passing)
+> Forensic testing laboratory displaying the unaltered sealed receipt. The offline verification engine verifies all 5 independent checks: *Input Salt Match*, *Decision Fingerprint*, *Ed25519 Signature*, *ML-DSA-65 Signature*, and *RFC 6962 Merkle Audit Path*.
+
+![Tamper Lab - Pristine Baseline](docs/screenshots/08_tamper_lab_pristine.png)
+
+#### 🔴 Attack Vector 1: Decision Flipping Caught
+> An attacker attempts to alter a loan decision from `REJECTED` to `APPROVED` after issuance. The offline verification engine immediately flags **Evidence Tampered**, detects **Commitment Mismatch**, and presents the forensic examiner's findings.
+
+![Tamper Lab - Decision Flipping Attack Caught](docs/screenshots/09_tamper_lab_decision_flipped.png)
+
+#### 🔴 Attack Vector 2: Signature Forgery Caught
+> An attacker attempts to substitute a forged signature on the sealed record. The engine rejects the fake signature bytes and flags non-repudiation invalidation.
+
+![Tamper Lab - Signature Forgery Attack Caught](docs/screenshots/10_tamper_lab_signature_forged.png)
+
+#### 🔴 Attack Vector 3: Transparency Log Tampering Caught
+> An attacker attempts to alter the public transparency log tree root to conceal evidence. The Merkle audit path check fails closed, proving the record is unverified against the log.
+
+![Tamper Lab - Merkle Root Alteration Attack Caught](docs/screenshots/11_tamper_lab_merkle_altered.png)
+
+---
+
+### 4. Mobile & Responsive Layouts
+
+| Case Overview (Mobile) | Decision Pipeline (Mobile) | Evidence Receipt (Mobile) |
+|:---:|:---:|:---:|
+| ![Mobile Overview](docs/screenshots/12_mobile_case_overview.png) | ![Mobile Decision Console](docs/screenshots/13_mobile_decision_console.png) | ![Mobile Evidence Receipt](docs/screenshots/14_mobile_evidence_receipt.png) |
+| *Responsive Trust Status & Metrics* | *Live 5-Stage Mobile Pipeline* | *Mobile Exhibit & Verification Stamp* |
 
 ---
 
